@@ -119,6 +119,11 @@ export function update_stage_update(payload) {
    return api.put(`admin/projects-stage-update/${payload.id}`, payload);
 }
 
+
+export function update_document(payload) {
+   return api.post(`admin/project-document`, payload);
+}
+
 // rojects-stage-update
 
 

@@ -97,6 +97,12 @@ export const router = createBrowserRouter([
       
       },
 
+       {
+        path: "/staff",
+        element: <StaffList />,
+      
+      },
+
 
        {
         path: "/logout",

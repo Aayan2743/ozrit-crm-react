@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-  import {list_project,update_stage,update_hosting_stage,update_stage_update,update_document} from '../api/api';
+  import {list_project,update_stage,update_hosting_stage,update_stage_update} from '../api/api';
 import { useRef } from 'react';
 import { 
   ArrowLeft,
@@ -38,29 +38,10 @@ import {
 } from "lucide-react";
 
 
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
-
-
 const ProjectView = () => {
    const { id } = useParams();
 
- const [modalOpen, setModalOpen]       = useState(false);
-const [activeDoc, setActiveDoc]       = useState(null); 
- const [modalOpen1, setModalOpen1]       = useState(false);
-const [activeDoc1, setActiveDoc1]       = useState(null); 
-
-
- const [modalOpenForAccepatance, setModalOpenForAccepatance] = useState(false);
-const [notes, setNotes]       = useState(); 
-
+   const [project, setProject] = useState(null);
 function getInitials(name) {
   return name
     .split(" ")
@@ -71,77 +52,80 @@ function getInitials(name) {
  const [previewUrl, setPreviewUrl] = useState(null);
    const [fileName, setFileName] = useState('');
 
- const [project, setProject] = useState({
-    id: id || "1",
-    name: "Sai Garments Website",
-    customer: {
-      name: "Sai Garments Ltd",
-      email: "contact@saigarments.com",
-      phone: "+91 98765 43210"
-    },
-    status: "In Progress",
-    deadline: "2024-07-15",
-    totalPrice: 45000,
-    advancePaid: 25000,
-    balanceRemaining: 20000,
-    balanceAsked: false,
-    services: ["Website Design", "SEO Setup", "Logo Design"],
-    domain: {
-      name: "saigarments.com",
-      owner: "Client has it"
-    },
-    hosting: {
-      status: "Need to assign"
-    },
-    logo: {
-      status: "Designed",
-      type: "Paid",
-      cost: 5000
-    },
-    contactInfo: "Sai Garments, 123 Fashion Street, Mumbai - 400001",
-    notes: "Premium e-commerce website with custom design and mobile responsiveness.",
-    team: [
-      { id: 1, name: "Raj Patel", role: "Designer", avatar: "RP" },
-      { id: 2, name: "Priya Shah", role: "Developer", avatar: "PS" },
-      { id: 3, name: "Amit Kumar", role: "SEO Specialist", avatar: "AK" }
-    ],
-    stages: {
-      domain: "Booked",
-      hosting: "Pending",
-      design: "In Progress",
-      madeLive: "No",
-      balanceAsked: "No"
-    },
-    attachments: [
-      { name: "logo-design.png", type: "image", size: "2.4 MB", date: "2024-06-01" },
-      { name: "content-doc.pdf", type: "pdf", size: "1.8 MB", date: "2024-06-03" },
-      { name: "references.zip", type: "archive", size: "15.2 MB", date: "2024-06-05" }
-    ],
-    activity: [
-      { action: "Stage updated: Design → In Progress", user: "Priya Shah", time: "2 hours ago" },
-      { action: "File uploaded: logo-design.png", user: "Raj Patel", time: "1 day ago" },
-      { action: "Project created", user: "Agency Owner", time: "3 days ago" }
-    ],
-    // New documents section
-    documents: {
-      engagementForm: {
-        status: "Received",
-        sentOn: "2024-06-01",
-        receivedOn: "2024-06-03",
-        fileName: "engagement-form-signed.pdf",
-        fileSize: "1.2 MB",
-        notes: "Signed and received on time"
-      },
-      acceptanceForm: {
-        status: "Pending",
-        sentOn: "2024-06-10",
-        receivedOn: null,
-        fileName: null,
-        fileSize: null,
-        notes: ""
-      }
-    }
-  });
+
+
+
+//  const [project, setProject] = useState({
+//     id: id || "1",
+//     name: "Sai Garments Website",
+//     customer: {
+//       name: "Sai Garments Ltd",
+//       email: "contact@saigarments.com",
+//       phone: "+91 98765 43210"
+//     },
+//     status: "In Progress",
+//     deadline: "2024-07-15",
+//     totalPrice: 45000,
+//     advancePaid: 25000,
+//     balanceRemaining: 20000,
+//     balanceAsked: false,
+//     services: ["Website Design", "SEO Setup", "Logo Design"],
+//     domain: {
+//       name: "saigarments.com",
+//       owner: "Client has it"
+//     },
+//     hosting: {
+//       status: "Need to assign"
+//     },
+//     logo: {
+//       status: "Designed",
+//       type: "Paid",
+//       cost: 5000
+//     },
+//     contactInfo: "Sai Garments, 123 Fashion Street, Mumbai - 400001",
+//     notes: "Premium e-commerce website with custom design and mobile responsiveness.",
+//     team: [
+//       { id: 1, name: "Raj Patel", role: "Designer", avatar: "RP" },
+//       { id: 2, name: "Priya Shah", role: "Developer", avatar: "PS" },
+//       { id: 3, name: "Amit Kumar", role: "SEO Specialist", avatar: "AK" }
+//     ],
+//     stages: {
+//       domain: "Booked",
+//       hosting: "Pending",
+//       design: "In Progress",
+//       madeLive: "No",
+//       balanceAsked: "No"
+//     },
+//     attachments: [
+//       { name: "logo-design.png", type: "image", size: "2.4 MB", date: "2024-06-01" },
+//       { name: "content-doc.pdf", type: "pdf", size: "1.8 MB", date: "2024-06-03" },
+//       { name: "references.zip", type: "archive", size: "15.2 MB", date: "2024-06-05" }
+//     ],
+//     activity: [
+//       { action: "Stage updated: Design → In Progress", user: "Priya Shah", time: "2 hours ago" },
+//       { action: "File uploaded: logo-design.png", user: "Raj Patel", time: "1 day ago" },
+//       { action: "Project created", user: "Agency Owner", time: "3 days ago" }
+//     ],
+//     // New documents section
+//     documents: {
+//       engagementForm: {
+//         status: "Received",
+//         sentOn: "2024-06-01",
+//         receivedOn: "2024-06-03",
+//         fileName: "engagement-form-signed.pdf",
+//         fileSize: "1.2 MB",
+//         notes: "Signed and received on time"
+//       },
+//       acceptanceForm: {
+//         status: "Pending",
+//         sentOn: "2024-06-10",
+//         receivedOn: null,
+//         fileName: null,
+//         fileSize: null,
+//         notes: ""
+//       }
+//     }
+//   });
 
 
 
@@ -187,6 +171,7 @@ function getInitials(name) {
       stages: stagesObj,
       // …include any other parsed fields here
     });
+    
   } catch (err) {
     console.error("Fetch error:", err);
     toast.error("Failed to fetch project. Please try again.");
@@ -473,133 +458,37 @@ useEffect(() => {
       }
     }));
   };
-const [selectedFile, setSelectedFile] = useState(null);
-  const handleElements=async ()=>{
-
-    console.log("gdfkgjfgjhjklgjhjfg ----");
-      console.log("project id",project.id);
-
-    console.log("previre", typeof previewUrl);
-    console.log("file name",typeof fileName);
-    console.log("date name",typeof date);
-    console.log("doc_notes ",typeof doc_notes);
-    console.log("setSelectedFile ",typeof selectedFile);
-    console.log("forpurpose ", fordata);
-
-     const formData = new FormData();
-  // If you stored the real File object in state (e.g. selectedFile), use that:
-  if (previewUrl) {
-    formData.append("document", previewUrl);
-  }
-  // Otherwise you could re-fetch it from your previewUrl, but best is to keep the File
-  formData.append("sentOn", date ?? "");
-  formData.append("notes", doc_notes ?? "");
-  formData.append("id",   project.id);
-  formData.append("file",   selectedFile);
-  formData.append("forpurpose",   fordata);
-  formData.append("doc_type",   "Engagement Form");
-
-
- 
-  try {
-    // 2) Call your API helper — adjust signature as needed
-    const response = await update_document(
-    
-      formData
-    );
-    console.log("✅ update_document response:", response.data);
-
-    // 3) (Optionally) refresh your project object so UI stays in sync
-    await fetchProject(project.id);
-  } catch (err) {
-    console.error("❌ update_document failed:", err);
-  }
-
-
-
-  }
-
-    const handleAcceptanceElements=async ()=>{
-
-    console.log("gdfkgjfgjhjklgjhjfg ----");
-      console.log("project id",project.id);
-
-    console.log("previre", typeof previewUrl);
-    console.log("file name",typeof fileName);
-    console.log("date name",typeof date);
-    console.log("doc_notes ",typeof doc_notes);
-    console.log("setSelectedFile ",typeof selectedFile);
-    console.log("forpurpose ", fordata);
-
-     const formData = new FormData();
-  // If you stored the real File object in state (e.g. selectedFile), use that:
-  if (previewUrl) {
-    formData.append("document", previewUrl);
-  }
-  // Otherwise you could re-fetch it from your previewUrl, but best is to keep the File
-  formData.append("sentOn", date ?? "");
-  formData.append("notes", doc_notes ?? "");
-  formData.append("id",   project.id);
-  formData.append("file",   selectedFile);
-  formData.append("forpurpose",   fordata);
-    formData.append("doc_type",   "Acceptance Form");
-
-
- 
-  try {
-    // 2) Call your API helper — adjust signature as needed
-    const response = await update_document(
-    
-      formData
-    );
-    console.log("✅ update_document response:", response.data);
-
-    // 3) (Optionally) refresh your project object so UI stays in sync
-    await fetchProject(project.id);
-  } catch (err) {
-    console.error("❌ update_document failed:", err);
-  }
-
-
-
-  }
-
- const [doc_notes,setDocumentNotes]=useState(null);
 
   const updateDocumentNotes = (docType, notes) => {
-setDocumentNotes(notes);
-
-    // setProject(prev => ({
-    //   ...prev,
-    //   documents: {
-    //     ...prev.documents,
-    //     [docType]: {
-    //       ...prev.documents[docType],
-    //       notes
-    //     }
-    //   }
-    // }));
-
-
+    setProject(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [docType]: {
+          ...prev.documents[docType],
+          notes
+        }
+      }
+    }));
   };
 
   const handleFileUpload = (docType, file) => {
     // Simulate file upload
 
 
-    // console.log("Fgkdfjgklfdjghklfg",docType);
-    // setProject(prev => ({
-    //   ...prev,
-    //   documents: {
-    //     ...prev.documents,
-    //     [docType]: {
-    //       ...prev.documents[docType],
-    //       fileName: file.name,
-    //       fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-    //       sentOn: new Date().toISOString().split('T')[0]
-    //     }
-    //   }
-    // }));
+    console.log("Fgkdfjgklfdjghklfg",docType);
+    setProject(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [docType]: {
+          ...prev.documents[docType],
+          fileName: file.name,
+          fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          sentOn: new Date().toISOString().split('T')[0]
+        }
+      }
+    }));
   };
 
   const daysUntilDeadline = Math.ceil((new Date(project.deadline) - new Date()) / (1000 * 60 * 60 * 24));
@@ -611,16 +500,20 @@ setDocumentNotes(notes);
   const onFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setSelectedFile(file);
+
+    // 1) Fire your upload handler if you want to send to server immediately
     handleFileUpload('engagementForm', file);
+
+    // 2) Create a preview URL and save filename
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     setFileName(file.name);
+
+    // 3) Reset the input so same file can be re-selected later
     e.target.value = null;
   };
 
-    const [date, setDate] = useState(project.sent_on);
-    const [fordata, setforData] = useState("");
+    const [date, setDate] = useState(project.documents.sentOn || "");
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
       <Sidebar />
@@ -1140,496 +1033,309 @@ setDocumentNotes(notes);
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center space-x-2">
                       <Paperclip className="h-5 w-5 text-purple-500" />
-                      <span>Engagement Form  </span>
-                      {/* <Badge className={
-                            project.documents[0].status === "Received"
+                      <span>Engagement Form</span>
+                      <Badge className={
+                            project.doc_status === "Received"
                           ? "bg-green-500 text-white"
-                          : project.documents[0].status === "Sent"
+                          : project.doc_status === "Sent"
                           ? "bg-blue-500 text-white"
                           : "bg-yellow-500 text-white"
                       }>
-                        {project.documents[0].status === "Received"
+                        {project.doc_status === "Received"
                       ? "✅ Received"
-                      : project.documents[0].status === "Sent"
+                      : project.doc_status === "Sent"
                       ? "✉️ Sent"
                       : "⚠️ Pending"}
-                      </Badge> */}
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
-                
-                
                   <CardContent className="space-y-4">
                     {/* File Upload/Display */}
-                 
+                    {project.documents.fileName ? (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-8 w-8 text-red-500" />
+                          <div>
+                            <p className="font-medium text-gray-800">{project.fileName}</p>
+                            <p className="text-sm text-gray-600">{project.fileSize}</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" title="View Document">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" title="Download">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" title="Replace File">
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
                      
-                     <div className="space-y-4">
-                              {project.documents.map((doc, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <FileText className="h-8 w-8 text-red-500" />
-                                    <div>
-                                      <p className="font-medium text-gray-800">{doc.doc_type}</p>
-                                      <p className="text-sm text-gray-600">{doc.doc_name}</p>
-                                      <p className="text-sm text-gray-600">{doc.sent_on}</p>
-                                      <p className="text-sm text-gray-600"> {(doc.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                      <div
+                            onClick={() => inputRef.current.click()}
+                            className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer"
+                          >
+                            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600 mb-2">Upload Engagement Form</p>
 
-                                       
-                                    </div>
-                                  </div>
-                                  <div className="flex space-x-2">
-                                       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                                                          <DialogTrigger asChild>
-                                                            <Button
-                                                              size="sm"
-                                                              variant="outline"
-                                                              onClick={() => {
-                                                                setActiveDoc(doc);
-                                                                setModalOpen(true);
-                                                              }}
-                                                            >
-                                                              <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                          </DialogTrigger>
-                                                          <DialogContent className="max-w-lg">
-                                                            <DialogHeader>
-                                                              <DialogTitle>Document Details</DialogTitle>
-                                                              <DialogDescription>
-                                                                Preview and metadata for <strong>{activeDoc?.file_name}</strong>
-                                                              </DialogDescription>
-                                                            </DialogHeader>
+                            {/* hidden input: */}
+                            <input
+                              type="file"
+                              accept=".pdf"
+                              ref={inputRef}
+                              className="hidden"
+                              onChange={onFileChange}
+                            />
 
-                                                            <div className="space-y-4">
-                                                              {/* 1) PDF preview */}
-                                                              <object
-                                                               
-                                                               data={activeDoc?.url}
-                                                                type="application/pdf"
-                                                                className="w-full h-96 border rounded"
-                                                              >
-                                                                <p>
-                                                                  <a
-                                                                    href={activeDoc?.doc_type}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                  >
-                                                                    Download PDF
-                                                                  </a>
-                                                                </p>
-                                                              </object>
+                            {/* Optional: keep your button for looks; clicking it also bubbles up */}
+                            <Button
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();     // prevent double-click autofocus
+                                inputRef.current.click();
+                              }}
+                            >
+                              Choose PDF File
+                            </Button>
+                          </div>
 
-                                                              {/* 2) Metadata */}
-                                                              <div className="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                  <span className="block text-sm font-medium text-gray-600">Status</span>
-                                                                  <Badge
-                                                                    className={
-                                                                      activeDoc?.status === "Received"
-                                                                        ? "bg-green-500 text-white"
-                                                                        : activeDoc?.status === "Sent"
-                                                                        ? "bg-blue-500 text-white"
-                                                                        : "bg-yellow-500 text-white"
-                                                                    }
-                                                                  >
-                                                                    {activeDoc?.status}
-                                                                  </Badge>
-                                                                </div>
-                                                                <div>
-                                                                  <span className="block text-sm font-medium text-gray-600">Sent On</span>
-                                                                  <p className="mt-1">{activeDoc?.sent_on || "—"}</p>
-                                                                </div>
-                                                              </div>
-
-                                                              {/* 3) Notes */}
-                                                              <div>
-                                                                <span className="block text-sm font-medium text-gray-600">Notes</span>
-                                                                <p className="mt-1 whitespace-pre-wrap">{activeDoc?.notes || "No notes."}</p>
-                                                              </div>
-                                                            </div>
-
-                                                            <DialogFooter>
-                                                              <Button variant="outline" onClick={() => setModalOpen(false)}>
-                                                                Close
-                                                              </Button>
-                                                            </DialogFooter>
-                                                          </DialogContent>
-                                        </Dialog>
+                
 
 
+                    )}
 
+                      {/* previrwe */}
 
+                     {previewUrl && (
+        <div className="mt-6">
+          <p className="font-medium text-gray-800 mb-2">Preview: {fileName}</p>
+          <object
+            data={previewUrl}
+            type="application/pdf"
+            className="w-full h-96 border rounded-md"
+          >
+            <p>
+              PDF preview not supported in your browser.{" "}
+              <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                Download the PDF
+              </a>
+            </p>
+          </object>
+        </div>
+                     )}
 
-                                    <Button size="sm" variant="outline" title="Download">
-                                      <Download className="h-4 w-4" />
-                                    </Button>
-                                    <Button size="sm" variant="outline" title="Replace File">
-                                      <RefreshCw className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                    {/* Date Information */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600 flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Sent to Client On </span>
+                        </label>
+                        <div className="mt-1">
+                          {project.sentOn ? (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              {project.sentOn}
+                            </Badge>
+                          ) : (
+                            <>
+                            {/* <span className="text-gray-400 text-sm">Not sent yet</span> */}
+                                 <input
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="border rounded px-2 py-1 text-sm"
+                              />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600 flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Received Back On</span>
+                        </label>
+                        <div className="mt-1">
+                          {project.receivedOn ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              {project.receivedOn}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Not received yet</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
-                     
+                    {/* Status Toggle */}
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700">Mark as Received</label>
+                      <Button
+                        size="sm"
+                        variant={project.status === "Received" ? "default" : "outline"}
+                        onClick={() => updateDocumentStatus('engagementForm', 
+                          project.status === "Received" ? "Pending" : "Received"
+                        )}
+                        className="flex items-center space-x-2"
+                      >
+                        {project.status === "Received" ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          <Clock className="h-4 w-4" />
+                        )}
+                        <span>{project.status === "Received" ? "Received" : "Mark Received"}</span>
+                      </Button>
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-2 block">Internal Notes</label>
+                      <Textarea
+                        placeholder="Add internal notes about this document..."
+                        value={project.notes}
+                        onChange={(e) => updateDocumentNotes('engagementForm', e.target.value)}
+                        className="min-h-[80px]"
+                      />
+                    </div>
 
                     <div>
                     
-
-                       <Dialog open={modalOpen1} onOpenChange={setModalOpen1}>
-        <DialogTrigger asChild>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => setModalOpen1(true)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Upload New Document
-          </Button>
-        </DialogTrigger>
-
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Engagement Form</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            {/* File picker */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Select PDF
-              </label>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={onFileChange}
-                className="mt-1"
-              />
-              {selectedFile && (
-                <p className="mt-1 text-sm text-gray-600">
-                  {selectedFile.name}
-                </p>
-              )}
-            </div>
-
-{/* purpose */}
-
-                            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                For
-              </label>
-              <select
-                value={fordata}
-                onChange={(e) => setforData(e.target.value)}
-                className="mt-1 block w-full border rounded px-2 py-1 bg-white"
-              >
-                <option value="" disabled>
-                  Select role…
-                </option>
-      
-                <option value="Engagement Form For Signature">Engagement Form For Signature</option>
-                <option value="Engagement Form For With">Engagement Form For with</option>
-                <option value="Engagement Form With Changes">Engagement Form With Changes </option>
-              </select>
-            </div>
-
-
-
-            {/* Date picker */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Sent On
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Notes
-              </label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="mt-1"
-                placeholder="Any internal notes…"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen1(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleElements}>Submit</Button>
-          </DialogFooter>
-        </DialogContent>
-                   </Dialog>
-
-
-
-
+                           <Button className="bg-purple-600 hover:bg-purple-700">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Upload dfsdf
+                      </Button>
 
 
                     </div>
                   </CardContent>
-               
-               
-               
-               
                 </Card>
 
                           {/* Acceptance Form Card */}
-              
-                 <Card className="border-2 border-dashed border-gray-200 hover:border-purple-300 transition-colors">
+                <Card className="border-2 border-dashed border-gray-200 hover:border-purple-300 transition-colors">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center space-x-2">
                       <Paperclip className="h-5 w-5 text-purple-500" />
-                      <span>Acceptance Form  fdf </span>
-                      {/* <Badge className={
-                            project.documents[0].status === "Received"
-                          ? "bg-green-500 text-white"
-                          : project.documents[0].status === "Sent"
-                          ? "bg-blue-500 text-white"
-                          : "bg-yellow-500 text-white"
+                      <span>Acceptance Form</span>
+                      <Badge className={project.documents.status === "Received" 
+                        ? "bg-green-500 text-white" 
+                        : "bg-yellow-500 text-white"
                       }>
-                        {project.documents[0].status === "Received"
-                      ? "✅ Received"
-                      : project.documents[0].status === "Sent"
-                      ? "✉️ Sent"
-                      : "⚠️ Pending"}
-                      </Badge> */}
+                        {project.documents.status === "Received" ? "✅ Received" : "⚠️ Pending"}
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
-                
-                
                   <CardContent className="space-y-4">
                     {/* File Upload/Display */}
-                  {/* .filter(doc => doc.doc_type === "Acceptance Form")
-  .map((doc, idx) => */}
-                     
-                     <div className="space-y-4">
-                              {project.documents
-  .filter(doc => doc.doc_type === "Acceptance Form")
-  .map((doc, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <FileText className="h-8 w-8 text-red-500" />
-                                    <div>
-                                      <p className="font-medium text-gray-800">{doc.doc_type}</p>
-                                      <p className="text-sm text-gray-600">{doc.doc_name}</p>
-                                      <p className="text-sm text-gray-600">{doc.sent_on}</p>
-                                      <p className="text-sm text-gray-600"> {(doc.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                    {project.documents.fileName ? (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-8 w-8 text-red-500" />
+                          <div>
+                            <p className="font-medium text-gray-800">{project.documents.fileName}</p>
+                            <p className="text-sm text-gray-600">{project.documents.fileSize}</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" title="View Document">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" title="Download">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" title="Replace File">
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-2">Upload Acceptance Form</p>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          className="hidden"
+                          id="acceptance-upload"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleFileUpload('acceptanceForm', file);
+                          }}
+                        />
+                        <label htmlFor="acceptance-upload">
+                          <Button variant="outline" className="cursor-pointer">
+                            Choose PDF File
+                          </Button>
+                        </label>
+                      </div>
+                    )}
 
-                                       
-                                    </div>
-                                  </div>
-                                  <div className="flex space-x-2">
-                                       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                                                          <DialogTrigger asChild>
-                                                            <Button
-                                                              size="sm"
-                                                              variant="outline"
-                                                              onClick={() => {
-                                                                setActiveDoc(doc);
-                                                                setModalOpen(true);
-                                                              }}
-                                                            >
-                                                              <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                          </DialogTrigger>
-                                                          <DialogContent className="max-w-lg">
-                                                            <DialogHeader>
-                                                              <DialogTitle>Document Details</DialogTitle>
-                                                              <DialogDescription>
-                                                                Preview and metadata for <strong>{activeDoc?.file_name}</strong>
-                                                              </DialogDescription>
-                                                            </DialogHeader>
+                    {/* Date Information */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600 flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Sent to Client On</span>
+                        </label>
+                        <div className="mt-1">
+                          {project.documents.sentOn ? (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              {project.documents.sentOn}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Not sent yet</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600 flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Received Back On</span>
+                        </label>
+                        <div className="mt-1">
+                          {project.documents.receivedOn ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              {project.documents.receivedOn}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Not received yet</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
-                                                            <div className="space-y-4">
-                                                              {/* 1) PDF preview */}
-                                                              <object
-                                                               
-                                                               data={activeDoc?.url}
-                                                                type="application/pdf"
-                                                                className="w-full h-96 border rounded"
-                                                              >
-                                                                <p>
-                                                                  <a
-                                                                    href={activeDoc?.doc_type}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                  >
-                                                                    Download PDF
-                                                                  </a>
-                                                                </p>
-                                                              </object>
+                    {/* Status Toggle */}
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700">Mark as Received</label>
+                      <Button
+                        size="sm"
+                        variant={project.documents.status === "Received" ? "default" : "outline"}
+                        onClick={() => updateDocumentStatus('acceptanceForm', 
+                          project.documents.status === "Received" ? "Pending" : "Received"
+                        )}
+                        className="flex items-center space-x-2"
+                      >
+                        {project.documents.status === "Received" ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          <Clock className="h-4 w-4" />
+                        )}
+                        <span>{project.documents.status === "Received" ? "Received" : "Mark Received"}</span>
+                      </Button>
+                    </div>
 
-                                                              {/* 2) Metadata */}
-                                                              <div className="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                  <span className="block text-sm font-medium text-gray-600">Status</span>
-                                                                  <Badge
-                                                                    className={
-                                                                      activeDoc?.status === "Received"
-                                                                        ? "bg-green-500 text-white"
-                                                                        : activeDoc?.status === "Sent"
-                                                                        ? "bg-blue-500 text-white"
-                                                                        : "bg-yellow-500 text-white"
-                                                                    }
-                                                                  >
-                                                                    {activeDoc?.status}
-                                                                  </Badge>
-                                                                </div>
-                                                                <div>
-                                                                  <span className="block text-sm font-medium text-gray-600">Sent On</span>
-                                                                  <p className="mt-1">{activeDoc?.sent_on || "—"}</p>
-                                                                </div>
-                                                              </div>
-
-                                                              {/* 3) Notes */}
-                                                              <div>
-                                                                <span className="block text-sm font-medium text-gray-600">Notes</span>
-                                                                <p className="mt-1 whitespace-pre-wrap">{activeDoc?.notes || "No notes."}</p>
-                                                              </div>
-                                                            </div>
-
-                                                            <DialogFooter>
-                                                              <Button variant="outline" onClick={() => setModalOpen(false)}>
-                                                                Close
-                                                              </Button>
-                                                            </DialogFooter>
-                                                          </DialogContent>
-                                        </Dialog>
-
-
-
-
-
-                                  
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                     
-
+                    {/* Notes */}
                     <div>
-                    
-
-                       <Dialog open={modalOpenForAccepatance} onOpenChange={setModalOpenForAccepatance}>
-        <DialogTrigger asChild>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => setModalOpenForAccepatance(true)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Upload New Document
-          </Button>
-        </DialogTrigger>
-
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Acceptance Form </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            {/* File picker */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Select PDF
-              </label>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={onFileChange}
-                className="mt-1"
-              />
-              {selectedFile && (
-                <p className="mt-1 text-sm text-gray-600">
-                  {selectedFile.name}
-                </p>
-              )}
-            </div>
-
-{/* purpose */}
-
-                            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                For
-              </label>
-              <select
-                value={fordata}
-                onChange={(e) => setforData(e.target.value)}
-                className="mt-1 block w-full border rounded px-2 py-1 bg-white"
-              >
-                <option value="" disabled>
-                  Select role…
-                </option>
-      
-                <option value="Acceptance Form With Signature">Acceptance Form With Signature</option>
-            
-                <option value="Acceptance Form With Changes">Acceptance Form With Changes </option>
-              </select>
-            </div>
-
-
-
-            {/* Date picker */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Received On
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Notes
-              </label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="mt-1"
-                placeholder="Any internal notes…"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen1(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAcceptanceElements}>Submit</Button>
-          </DialogFooter>
-        </DialogContent>
-                   </Dialog>
-
-
-
-
-
-
+                      <label className="text-sm font-medium text-gray-600 mb-2 block">Internal Notes</label>
+                      <Textarea
+                        placeholder="Add internal notes about this document..."
+                        value={project.documents.notes}
+                        onChange={(e) => updateDocumentNotes('acceptanceForm', e.target.value)}
+                        className="min-h-[80px]"
+                      />
                     </div>
                   </CardContent>
-               
-               
-               
-               
                 </Card>
               </div>
             </CardContent>
