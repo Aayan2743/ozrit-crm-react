@@ -19,6 +19,7 @@ import Logout from "../pages/Logout";
 
 import AddCustomer from "../pages/AddCustomer";
 import AddProject from "../pages/AddProject";
+import EditProject from "../pages/EditProject";
 import ProjectView from "../pages/ProjectView";
 import AllProjects from "../pages/AllProjects";
 import CustomerList from "../pages/CustomerList";
@@ -94,6 +95,11 @@ export const router = createBrowserRouter([
        {
         path: "/project/:id",
         element: <ProjectView />,
+      
+      },
+       {
+        path: "/project-edit/:id",
+        element: <EditProject />,
       
       },
 

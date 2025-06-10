@@ -124,6 +124,16 @@ export function update_document(payload) {
    return api.post(`admin/project-document`, payload);
 }
 
+export const delete_document= async (id)=>{
+     const response= await api.delete(`admin/project-document-delete/${id}`);
+     return response;
+}
+
+export const get_all_salesTeam= async (id)=>{
+     const response= await api.get('admin/list-staff');
+     return response;
+}
+
 // rojects-stage-update
 
 

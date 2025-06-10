@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,15 @@ import {
   ExternalLink
 } from "lucide-react";
 
-import { list_customers,add_project,get_all_salesTeam } from "../api/api";
+import { list_customers,add_project,get_all_salesTeam,list_project } from "../api/api";
 
 const AddProject = () => {
+
+  const { id } = useParams();
+ 
+
+  
+
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [customers, setCustomers] = useState([]);
@@ -69,6 +75,33 @@ const AddProject = () => {
     paymentMode: "",
     paymentScreenshot: null
   });
+
+
+useEffect(() => {
+  const fetchProject = async () => {
+    try {
+      const data = await list_project(id);
+      
+      const projectData = data.data.data;
+      console.log("Aaya",projectData);
+      setFormData({
+          ...formData,
+         customerId: projectData.customerId,
+         projectTitle: projectData.projectTitle,
+         services:projectData.services,
+         totalPrice:projectData.totalPrice,
+         orderSource:projectData.orderSource,
+      });
+
+    } catch (error) {
+      console.error("Error fetching project:", error);
+    }
+  };
+
+  if (id) {
+    fetchProject();
+  }
+}, [id]);
 
   const steps = [
     { id: 1, title: "Basic Info", icon: Briefcase },
@@ -1007,7 +1040,7 @@ const handleSubmit = async (e) => {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <Sparkles className="h-8 w-8 text-purple-500" />
-              <h1 className="text-3xl font-bold text-gray-800">Add New Project</h1>
+              <h1 className="text-3xl font-bold text-gray-800">Update Project</h1>
             </div>
             <p className="text-gray-600">
               Create a new project and assign it to your team
