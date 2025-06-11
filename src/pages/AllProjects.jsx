@@ -50,7 +50,7 @@ const AllProjects = () => {
     // Call your API helper (which itself presumably returns a promise)
     const response = await list_projects();
 
-    console.log(response.data.data);
+    console.log("fgfg",response.data);
     return response.data.data;
   } catch (error) {
     console.error("Failed to fetch projects:", error);
@@ -65,6 +65,8 @@ useEffect(() => {
     const load = async () => {
       try {
         const data = await fetchProjects();     // 1) wait for API call
+        console.log("fgdfgfd",data);
+       
         if (Array.isArray(data)) {             // 2) make sure it’s actually an array
           setProjects(data);                   // 3) update your state
         } else {

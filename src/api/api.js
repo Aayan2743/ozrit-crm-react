@@ -2,7 +2,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 const api=axios.create({
-    baseURL:'http://192.168.80.42:8000/api',
+   //  baseURL:'http://192.168.80.42:8000/api',
+    baseURL:'http://192.168.31.56:8000/api',
      headers: {
         //  "Content-Type": "application/json",
    
@@ -134,6 +135,10 @@ export const get_all_salesTeam= async (id)=>{
      return response;
 }
 
+export function update_project(payload,id) {
+   return api.put(`admin/update-project/${id}`, payload);
+}
+//update_project
 // rojects-stage-update
 
 

@@ -33,7 +33,7 @@ import {
   ExternalLink
 } from "lucide-react";
 
-import { list_customers,add_project,get_all_salesTeam,list_project } from "../api/api";
+import { list_customers,add_project,get_all_salesTeam,list_project,update_project } from "../api/api";
 
 const AddProject = () => {
 
@@ -53,12 +53,12 @@ const AddProject = () => {
   const [salesAgents, setsalesAgents] = useState([]);
 
   const [formData, setFormData] = useState({
-    customerId: "",
+    customerId: '',
     projectTitle: "",
     services: [],
     totalPrice: "",
     orderSource: "",
-    salesAgent: "",
+    salesAgent: '',
     domainName: "",
     domainOwnership: "",
     hostingType: "",
@@ -82,15 +82,64 @@ useEffect(() => {
     try {
       const data = await list_project(id);
       
+
+
+
       const projectData = data.data.data;
+      
+        const cleanedSalesAgent =
+        typeof projectData.salesAgent === "string"
+          ? projectData.salesAgent.replace(/^"|"$/g, '')
+          : projectData.salesAgent;
+
+      const parsedAttachments = projectData.attachments
+  ? JSON.parse(projectData.attachments)
+  : [];
+
+
+  setAttachmentss(
+  parsedAttachments.map((path) => ({
+     file: { name: path.split("/").pop() }, // extract filename
+       preview: `https://yourdomain.com/${path}`,
+  }))
+);
+          console.log("type of", typeof projectData.customerId);
+      
       console.log("Aaya",projectData);
       setFormData({
           ...formData,
-         customerId: projectData.customerId,
+         customerId: projectData.customerId?.toString() ?? "",
          projectTitle: projectData.projectTitle,
-         services:projectData.services,
+        
+         
+        services: Array.isArray(projectData.services)
+  ? projectData.services
+  : JSON.parse(projectData.services || "[]"),
+
+
          totalPrice:projectData.totalPrice,
          orderSource:projectData.orderSource,
+         salesAgent: cleanedSalesAgent,
+         domainName: projectData.domainName,
+        domainOwnership: projectData.domainOwnership || "client",
+        hostingType: projectData.hostingType || "client",
+       hasLogo: projectData.hasLogo?.toLowerCase() || "no",
+       logoType: projectData.logoType?.toLowerCase() || "free",
+       logoCost: projectData.logoCost,
+       contactDetails: projectData.contactDetails,
+       deadline: new Date(projectData.deadline).toISOString().split("T")[0],
+        assignedTo: projectData.assignedTo
+        ? JSON.parse(projectData.assignedTo)
+        : [],
+      attachments: projectData.attachments
+        ? JSON.parse(projectData.attachments)
+        : [],
+       notes:projectData.notes,
+       advancePaid:projectData.advancePaid,
+       paymentMode:projectData.paymentMode,
+      
+      
+         
       });
 
     } catch (error) {
@@ -252,14 +301,27 @@ setAttachmentss(files.map(file => ({ file, preview: URL.createObjectURL(file) })
   }));
 };
 
-  const handleStaffToggle = (staff) => {
-    setFormData(prev => ({
+  // const handleStaffToggle = (staff) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     assignedTo: prev.assignedTo.includes(staff)
+  //       ? prev.assignedTo.filter(s => s !== staff)
+  //       : [...prev.assignedTo, staff]
+  //   }));
+  // };
+
+  const handleStaffToggle = (name) => {
+  setFormData((prev) => {
+    const isSelected = prev.assignedTo.includes(name);
+    return {
       ...prev,
-      assignedTo: prev.assignedTo.includes(staff)
-        ? prev.assignedTo.filter(s => s !== staff)
-        : [...prev.assignedTo, staff]
-    }));
-  };
+      assignedTo: isSelected
+        ? prev.assignedTo.filter((n) => n !== name)
+        : [...prev.assignedTo, name],
+    };
+  });
+};
+
 
   const validateCurrentStep = () => {
     switch (currentStep) {
@@ -349,6 +411,7 @@ const handleSubmit = async (e) => {
 
   // Build multipart FormData
   const payload = new FormData();
+
   payload.append("customerId", formData.customerId);
   payload.append("projectTitle", formData.projectTitle);
   payload.append("totalPrice", formData.totalPrice);
@@ -425,9 +488,11 @@ const handleSubmit = async (e) => {
   }
 }
 
+console.log("dkfjdfkg",payload);
+
   try {
     // If using Axios, simply do: add_project(payload)
-    const response = await add_project(payload);
+    const response = await update_project(payload,id);
     console.log("response",response.status);
     if (!response.data.status) {
       toast.error(response.data.message, { duration: 2000 });
@@ -454,23 +519,33 @@ const handleSubmit = async (e) => {
             </div>
             
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="customer" className="text-gray-700 font-medium">
-                  Select Customer *
-                </Label>
-                <Select value={formData.customerId} onValueChange={(value) => handleInputChange("customerId", value)}>
-                  <SelectTrigger className="mt-1 h-12 border-gray-200 focus:border-purple-500">
-                    <SelectValue placeholder="Choose a customer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id.toString()}>
-                        {customer.fullName} - {customer.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
+              {customers.length > 0 && (
+    <div>
+      <Label htmlFor="customerId" className="text-gray-700 font-medium">
+        Select Customer *
+      </Label>
+      <Select
+        value={formData.customerId}
+        onValueChange={(value) => handleInputChange("customerId", value)}
+      >
+        <SelectTrigger
+          id="customerId"
+          className="mt-1 h-12 border-gray-200 focus:border-purple-500"
+        >
+          <SelectValue placeholder="Choose a customer" />
+        </SelectTrigger>
+        <SelectContent>
+          {customers.map((customer) => (
+            <SelectItem key={customer.id} value={customer.id.toString()}>
+              {customer.fullName} - {customer.email}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )}
+
 
               <div>
                 <Label htmlFor="projectTitle" className="text-gray-700 font-medium">
@@ -534,21 +609,36 @@ const handleSubmit = async (e) => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="salesAgent" className="text-gray-700 font-medium">
-                  Sales Agent
-                </Label>
-                <Select value={formData.salesAgent} onValueChange={(value) => handleInputChange("salesAgent", value)}>
-                      <SelectTrigger className="mt-1 h-12 border-gray-200 focus:border-purple-500">
-                        <SelectValue placeholder="Select agent" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {salesAgents.map((agent) => (
-                          <SelectItem key={agent.id} value={agent.name}>{agent.name}</SelectItem>
-                        ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                     
+                     {salesAgents.length > 0 && (
+  <div>
+    <Label htmlFor="salesAgent" className="text-gray-700 font-medium">
+      Sales Agent *
+    </Label>
+    <Select
+      value={formData.salesAgent}
+      onValueChange={(value) =>
+        handleInputChange("salesAgent", value.replace(/^"|"$/g, ''))
+      }
+    >
+      <SelectTrigger
+        id="salesAgent"
+        className="mt-1 h-12 border-gray-200 focus:border-purple-500"
+      >
+        <SelectValue placeholder="Select agent" />
+      </SelectTrigger>
+      <SelectContent>
+        {salesAgents.map((agent) => (
+          <SelectItem key={agent.id} value={agent.name}>
+            {agent.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+)}
+
+
             </div>
           </div>
         );
@@ -1130,7 +1220,7 @@ const handleSubmit = async (e) => {
                       className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 flex items-center space-x-2 text-lg px-8 py-3"
                     >
                       <CheckCircle className="h-5 w-5" />
-                      <span>Create Project</span>
+                      <span>Update Project</span>
                     </Button>
                   )}
                 </div>
