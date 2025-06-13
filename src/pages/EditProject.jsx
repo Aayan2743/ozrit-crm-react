@@ -412,6 +412,7 @@ const handleSubmit = async (e) => {
   // Build multipart FormData
   const payload = new FormData();
 
+  payload.append("id", id);
   payload.append("customerId", formData.customerId);
   payload.append("projectTitle", formData.projectTitle);
   payload.append("totalPrice", formData.totalPrice);
@@ -442,32 +443,25 @@ const handleSubmit = async (e) => {
 
   // Append each PDF as attachments[]
 
-  attachmentss.forEach((item) => {
-  const f = item.file;
-
-  // 1) First, ensure it's actually a File
-  if (!(f instanceof File)) {
-    console.warn("Skipping: not a File instance", f);
-    return;
-  }
-
-  // 2) Check its MIME‐type
-  if (f.type === "application/pdf") {
-    // ✔ It’s a PDF, so append it
-    payload.append("attachmentsx[]", f);
-  } else {
-    console.warn(`Skipping "${f.name}": not a PDF (type=${f.type})`);
-  }
-});
 
 
 
-  // Append each image as paymentScreenshots[]
-  paymentScreenshots.forEach((item) => {
-    payload.append("paymentScreenshots[]", item.file);
+   attachmentss.forEach(item => {
+    const f = item.file;
+    if (f instanceof File && f.type === "application/pdf") {
+      payload.append("attachments[]", f);
+    }
   });
 
-  // Debug: print out FormData so you can confirm keys/values
+  // 4) Attach payment screenshots
+  paymentScreenshots.forEach(item => {
+    const img = item.file;
+    if (img instanceof File && img.type.startsWith("image/")) {
+      payload.append("paymentScreenshots[]", img);
+    }
+  });
+
+
 
   for (let [key, value] of payload.entries()) {
   if (value instanceof File) {
@@ -492,12 +486,14 @@ console.log("dkfjdfkg",payload);
 
   try {
     // If using Axios, simply do: add_project(payload)
-    const response = await update_project(payload,id);
+    const response = await update_project(
+      payload);
     console.log("response",response.status);
     if (!response.data.status) {
       toast.error(response.data.message, { duration: 2000 });
     } else {
       toast.success(response.data.message, { duration: 2000 });
+        navigate('/list-projects')
       // navigate("/dashboard") after a delay if desired
     }
   } catch (err) {

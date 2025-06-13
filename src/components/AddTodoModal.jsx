@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +13,45 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
 
+import {list_customers,list_projects,get_all_staffs,create_task} from '../api/api';
+
 const AddTodoModal = ({ isOpen, onClose }) => {
   const [taskTitle, setTaskTitle] = useState("");
   const [dueDate, setDueDate] = useState();
   const [priority, setPriority] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [linkedProject, setLinkedProject] = useState("");
+  const [linkedProjectName, setLinkedProjectName] = useState("");
   const [linkedCustomer, setLinkedCustomer] = useState("");
   const [description, setDescription] = useState("");
+  const [staff, setstaff] = useState([]);
+  const [projects, setprojects] = useState([]);
+
+
+  const get_staff=async()=>{
+     const staff=await get_all_staffs()
+  
+     setstaff(staff.data.data);
+     
+  }
+
+   const get_projects=async()=>{
+     const projects=await list_projects()
+     console.log("my projects",projects.data.data);
+
+      const projectsSummary = projects.data.data.map(({ id, projectTitle }) => ({ id, projectTitle }));
+
+      setprojects(projectsSummary);  
+     console.log("my projects (id & title):", projects1);
+  }
+
+
+  useEffect(()=>{
+    get_staff();
+    get_projects();
+
+  },[])
+
 
   const priorities = [
     { value: "low", label: "Low Priority", color: "bg-green-100 text-green-700", emoji: "🟢" },
@@ -28,7 +59,7 @@ const AddTodoModal = ({ isOpen, onClose }) => {
     { value: "high", label: "High Priority", color: "bg-red-100 text-red-700", emoji: "🔴" },
   ];
 
-  const staff = [
+  const staff1 = [
     { id: 1, name: "John Doe" },
     { id: 2, name: "Sarah Smith" },
     { id: 3, name: "Mike Johnson" },
@@ -42,7 +73,7 @@ const AddTodoModal = ({ isOpen, onClose }) => {
     { id: 4, name: "E-commerce Plus" },
   ];
 
-  const projects = [
+  const projects1 = [
     { id: 1, name: "TechCorp Website Redesign" },
     { id: 2, name: "StartupXYZ Mobile App" },
     { id: 3, name: "DesignStudio Portfolio" },
@@ -51,22 +82,56 @@ const AddTodoModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+
+     const payload = {
+          type:"task",
+          title:       taskTitle,
+          
+         dueDate : dueDate.replace("T", " ").split(".")[0],
+          priority,    // e.g. "High"
+          assignedTo,  // optional
+          linkedProject,
+          linkedProjectName,
+          linkedCustomer,
+          description,
+     };
+
+     console.log("payload",payload);
+
+     const add_task=async()=>{
+         const add_task=await create_task(payload);
+        console.log("api log",add_task);
+     }
+
+     try{
+      add_task()
+
+     }catch(err){
+
+     }finally{
+
+     } 
+
+
     if (!taskTitle || !dueDate || !priority) {
       toast.error("Please fill in all required fields!");
       return;
     }
 
+
+
     toast.success("Task added to your list – Don't miss it 💪");
     
     // Reset form
-    setTaskTitle("");
-    setDueDate();
-    setPriority("");
-    setAssignedTo("");
-    setLinkedProject("");
-    setLinkedCustomer("");
-    setDescription("");
-    onClose();
+    // setTaskTitle("");
+    // setDueDate();
+    // setPriority("");
+    // setAssignedTo("");
+    // setLinkedProject("");
+    // setLinkedCustomer("");
+    // setDescription("");
+    // onClose();
   };
 
   const selectedPriority = priorities.find(p => p.value === priority);
@@ -123,8 +188,17 @@ const AddTodoModal = ({ isOpen, onClose }) => {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={dueDate}
-                    onSelect={setDueDate}
+                    // selected={dueDate}
+                    selected={dueDate ? new Date(dueDate) : undefined}
+                    onSelect={(date) => {
+                      // date is a JS Date object; to SQL-date:
+                      const sqlDate = date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+                      setDueDate(sqlDate);
+                    }}
+
+
+
+                    // onSelect={setDueDate}
                     disabled={(date) => date < new Date()}
                     initialFocus
                     className="pointer-events-auto"
@@ -182,8 +256,8 @@ const AddTodoModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Link to Customer or Project */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-4">
+            {/* <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Link to Customer</label>
               <Select value={linkedCustomer} onValueChange={setLinkedCustomer}>
                 <SelectTrigger className="h-10 rounded-lg border-green-200">
@@ -197,25 +271,54 @@ const AddTodoModal = ({ isOpen, onClose }) => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
                 <Briefcase className="h-4 w-4 text-green-500" />
                 <span>Link to Project</span>
               </label>
-              <Select value={linkedProject} onValueChange={setLinkedProject}>
+         {/* onValueChange={(val) => {
+    setLinkedProjectId(val);
+    // find the object:
+    const proj = projects.find(p => p.id.toString() === val);
+    setLinkedProjectName(proj?.projectTitle || "");
+  }} */}
+
+         <Select
+            value={linkedProject}
+            onValueChange={(val) => {
+              setLinkedProject(val);
+              const proj = projects.find(p => p.id.toString() === val);
+              setLinkedProjectName(proj?.projectTitle || "");
+            }}
+>
                 <SelectTrigger className="h-10 rounded-lg border-green-200">
                   <SelectValue placeholder="Select project..." />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
+                      {project.projectTitle}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+
+
+              {/* <Select value={linkedProject} onValueChange={setLinkedProject}>
+                <SelectTrigger className="h-10 rounded-lg border-green-200">
+                  <SelectValue placeholder="Select project..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.projectTitle}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select> */}
             </div>
           </div>
 

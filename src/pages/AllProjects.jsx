@@ -548,14 +548,13 @@ useEffect(() => {
                         View
                       </Button>
                     </Link>
-                    <Button size="sm" variant="outline" className="text-xs">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-xs">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Update
-                    </Button>
+                     <Link to={`/project-edit/${project.id}`}>
+                        <Button size="sm" variant="outline" className="text-xs">
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                    </Link>
+                  
                   </div>
                 </CardContent>
               </Card>

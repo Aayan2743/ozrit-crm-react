@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,56 +7,109 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AddStaffModal from "../components/AddStaffModal";
+import EditStaffModal from "../components/EditStaffModal";
 import { Plus, Eye, Edit, UserX, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
+import {get_all_staffs,delete_staff} from '../api/api';
+import Swal from 'sweetalert2';
 const StaffList = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddModalOpen1, setIsAddModalOpen1] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+   const [selectedStaff, setSelectedStaff] = useState(null);
+   const [loading, setLoading] = useState(false);
 
-  // Mock staff data
-  const staffMembers = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@company.com",
-      employeeId: "EMP001",
-      role: "Frontend Developer",
-      status: "Active",
-      profilePicture: "",
-      phone: "+1 234 567 8901"
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane.smith@company.com",
-      employeeId: "EMP002",
-      role: "UI/UX Designer",
-      status: "On Leave",
-      profilePicture: "",
-      phone: "+1 234 567 8902"
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@company.com",
-      employeeId: "EMP003",
-      role: "Backend Developer",
-      status: "Active",
-      profilePicture: "",
-      phone: "+1 234 567 8903"
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      email: "sarah.wilson@company.com",
-      employeeId: "EMP004",
-      role: "Project Manager",
-      status: "Resigned",
-      profilePicture: "",
-      phone: "+1 234 567 8904"
+   const deleteHandler=async (id)=>{
+        // const deletestaff=delete_staff(id);
+
+
+
+        // console.log(deletestaff);
+    const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: "This will permanently delete the staff member.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#d33',
+    reverseButtons: true,
+  });
+
+  if (result.isConfirmed) {
+    try {
+      // Call your API
+      const response = await delete_staff(id);
+      if (response.data.status) {
+        Swal.fire(
+          'Deleted!',
+          'The staff member has been deleted.',
+          'success'
+        );
+
+          get_my_staff();
+        // Optionally re-fetch your list here, e.g. fetchStaff()
+      } else {
+        Swal.fire(
+          'Error',
+          response.data.message || 'Could not delete staff.',
+          'error'
+        );
+      }
+    } catch (err) {
+      Swal.fire(
+        'Error',
+        err.message || 'An unexpected error occurred.',
+        'error'
+      );
     }
-  ];
+  } else if (result.dismiss === Swal.DismissReason.cancel) {
+    Swal.fire(
+      'Cancelled',
+      'Your staff member is safe.',
+      'info'
+    );
+  }
+
+
+   }
+
+  const [staffMembers,setStaff]=useState([])
+     
+        const get_my_staff=async()=>{
+           setLoading(true);
+            try{
+             
+            
+               const data= await get_all_staffs();
+
+              console.log("my staff",data.data.data);
+
+              setStaff(data.data.data);
+              
+            }catch(error){
+                console.log(error)
+            }finally{
+                setLoading(false);
+            }
+
+         
+      }
+
+  useEffect(()=>{
+
+     
+      get_my_staff();
+
+    
+  },[]);
+
+
+
+
+
+
+
 
   const getStatusBadgeVariant = (status) => {
     switch (status) {
@@ -71,16 +124,82 @@ const StaffList = () => {
     }
   };
 
-  const filteredStaff = staffMembers.filter(staff =>
-    staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    staff.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    staff.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredStaff = staffMembers.filter(staff =>
+  //   staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   staff.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   staff.role.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+
+const filteredStaff = staffMembers.filter(staff => {
+  const name       = (staff.name       || "").toLowerCase();
+  const email      = (staff.email      || "").toLowerCase();
+  const employeeId = (staff.employeeId || "").toLowerCase();
+  const role       = (staff.role       || "").toLowerCase();
+  const term       = searchTerm.toLowerCase();
 
   return (
+    name.includes(term) ||
+    email.includes(term) ||
+    employeeId.includes(term) ||
+    role.includes(term)
+  );
+});
+
+
+if (loading) {
+    return (
+      <>
+        {/* Inline CSS for the spinner */}
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .spinner-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .spinner {
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              width: 48px;
+              height: 48px;
+              animation: spin 1s linear infinite;
+            }
+            .spinner-text {
+              margin-top: 0.75rem;
+              font-size: 1rem;
+              color: #555;
+            }
+          `}
+        </style>
+        <div className="spinner-container">
+          <div className="spinner"></div>
+          <div className="spinner-text">Loading customer…</div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+
+
+
+
+    
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
+
+
+
+
+
       
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
@@ -185,7 +304,7 @@ const StaffList = () => {
                       <span className="font-medium">Email:</span> {staff.email}
                     </div>
                     <div>
-                      <span className="font-medium">Phone:</span> {staff.phone}
+                      <span className="font-medium">Phone:</span> {staff.contact}
                     </div>
                   </div>
                   
@@ -196,12 +315,15 @@ const StaffList = () => {
                         View
                       </Button>
                     </Link>
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button variant="outline" size="sm" className="flex-1"  onClick={() => {
+                          setSelectedStaff(staff);    
+                          setIsAddModalOpen1(true);   
+                        }}>
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
                     {staff.status === "Active" && (
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={()=>deleteHandler(staff.id)}>
                         <UserX className="h-4 w-4" />
                       </Button>
                     )}
@@ -222,6 +344,13 @@ const StaffList = () => {
       <AddStaffModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
+      />
+
+      <EditStaffModal 
+       staff={selectedStaff}
+        isOpen={isAddModalOpen1} 
+        onClose={() => setIsAddModalOpen1(false)} 
+        onSave={() => get_my_staff()} 
       />
     </div>
   );

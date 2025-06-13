@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {get_all_staff} from '../api/api';
+
+
+
+// const [staffs, setStaff]=useState({
+
+// });
+
+
+
+
 import { 
   ArrowLeft, 
   Edit, 
@@ -25,6 +36,34 @@ import {
 
 const StaffProfile = () => {
   const { id } = useParams();
+    const [loading, setLoading] = useState(false);
+  const [staffMembers,setStaff]=useState([])
+ 
+  const getstaff= async (id)=>{
+      setLoading(true)
+        try{
+           const data=await get_all_staff(id);
+       console.log('staff',data.data.data);
+      setStaff(data.data.data);
+
+        }catch(error){
+            console.log(error)
+        }finally{
+            setLoading(false)
+        }
+      
+    }
+ 
+  useEffect(()=>{
+
+    getstaff(id);
+
+ 
+  },
+  [id]);
+
+
+
 
   // Mock staff data - in real app, fetch based on ID
   const staff = {
@@ -83,6 +122,54 @@ const StaffProfile = () => {
     }
   };
 
+  const initials = (staffMembers.name || "")
+  .trim()                          // remove extra whitespace
+  .split(/\s+/)                    // split on one or more spaces
+  .map(word => word.charAt(0))    // take first letter of each word
+  .join("")                        // concatenate
+  .toUpperCase();   
+
+  if (loading) {
+    return (
+      <>
+        {/* Inline CSS for the spinner */}
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .spinner-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .spinner {
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              width: 48px;
+              height: 48px;
+              animation: spin 1s linear infinite;
+            }
+            .spinner-text {
+              margin-top: 0.75rem;
+              font-size: 1rem;
+              color: #555;
+            }
+          `}
+        </style>
+        <div className="spinner-container">
+          <div className="spinner"></div>
+          <div className="spinner-text">Loading Staff</div>
+        </div>
+      </>
+    );
+  }
+  
+  
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -100,10 +187,7 @@ const StaffProfile = () => {
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Staff Profile</h1>
             </div>
-            <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
+          
           </div>
 
           {/* Personal & Job Info Card */}
@@ -111,17 +195,19 @@ const StaffProfile = () => {
             <CardContent className="p-8">
               <div className="flex items-start space-x-6">
                 <Avatar className="h-32 w-32">
-                  <AvatarImage src={staff.profilePicture} />
+                  <AvatarImage src={staffMembers.profile_pic_url} />
                   <AvatarFallback className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white text-2xl">
-                    {staff.name.split(' ').map(n => n[0]).join('')}
+                   {initials}
+
+                    
                   </AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1">
                   <div className="flex items-center space-x-4 mb-4">
-                    <h2 className="text-2xl font-bold">{staff.name}</h2>
-                    <Badge variant={getStatusBadgeVariant(staff.status)} className="text-sm">
-                      {staff.status}
+                    <h2 className="text-2xl font-bold">{staffMembers.name}</h2>
+                    <Badge variant={getStatusBadgeVariant(staffMembers.status)} className="text-sm">
+                      {staffMembers.status}
                     </Badge>
                   </div>
                   
@@ -129,37 +215,37 @@ const StaffProfile = () => {
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <Mail className="h-4 w-4 text-gray-500" />
-                        <span>{staff.email}</span>
+                        <span>{staffMembers.email}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Phone className="h-4 w-4 text-gray-500" />
-                        <span>{staff.phone.join(", ")}</span>
+                        <span>{staffMembers.contact}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-gray-500" />
-                        <span><strong>ID:</strong> {staff.employeeId}</span>
+                        <span><strong>ID:</strong> {staffMembers.employeeId}</span>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
-                        <span><strong>Role:</strong> {staff.role}</span>
+                        <span><strong>Role:</strong> {staffMembers.role}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <span><strong>Joined:</strong> {new Date(staff.joiningDate).toLocaleDateString()}</span>
+                        <span><strong>Joined:</strong> {new Date(staffMembers.joiningDate).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Clock className="h-4 w-4 text-gray-500" />
-                        <span><strong>Shift:</strong> {staff.shift}</span>
+                        <span><strong>Shift:</strong> {staffMembers.shiftStart} - {staffMembers.shiftEnd}</span>
                       </div>
                     </div>
                   </div>
                   
                   {staff.notes && (
                     <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-700">{staff.notes}</p>
+                      <p className="text-sm text-gray-700">{staffMembers.notes}</p>
                     </div>
                   )}
                 </div>
@@ -189,7 +275,11 @@ const StaffProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {staff.documents.map((doc, index) => (
+
+      <p>Coming Soon</p>
+
+
+                    {/* {staff.documents.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
                           <h4 className="font-medium">{doc.name}</h4>
@@ -206,7 +296,7 @@ const StaffProfile = () => {
                           </Button>
                         </div>
                       </div>
-                    ))}
+                    ))} */}
                   </div>
                 </CardContent>
               </Card>
@@ -223,7 +313,8 @@ const StaffProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {staff.payslips.map((payslip, index) => (
+                       <p>Coming Soon</p>
+                    {/* {staff.payslips.map((payslip, index) => (
                       <Card key={index}>
                         <CardContent className="p-4">
                           <h4 className="font-semibold mb-2">{payslip.month}</h4>
@@ -247,7 +338,7 @@ const StaffProfile = () => {
                           </Button>
                         </CardContent>
                       </Card>
-                    ))}
+                    ))} */}
                   </div>
                 </CardContent>
               </Card>
@@ -260,7 +351,8 @@ const StaffProfile = () => {
                 <Card>
                   <CardContent className="p-6">
                     <div className="grid grid-cols-3 gap-6 text-center">
-                      <div>
+                         <p>Coming Soon</p>
+                      {/* <div>
                         <div className="text-2xl font-bold text-red-600">{staff.leaveStats.taken}</div>
                         <div className="text-sm text-gray-600">Taken</div>
                       </div>
@@ -271,7 +363,7 @@ const StaffProfile = () => {
                       <div>
                         <div className="text-2xl font-bold text-blue-600">{staff.leaveStats.total}</div>
                         <div className="text-sm text-gray-600">Total</div>
-                      </div>
+                      </div> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -286,7 +378,8 @@ const StaffProfile = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {staff.leaves.map((leave, index) => (
+                         <p>Coming Soon</p>
+                      {/* {staff.leaves.map((leave, index) => (
                         <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                           <div>
                             <h4 className="font-medium">{leave.dates}</h4>
@@ -296,7 +389,7 @@ const StaffProfile = () => {
                             {leave.status}
                           </Badge>
                         </div>
-                      ))}
+                      ))} */}
                     </div>
                   </CardContent>
                 </Card>
@@ -314,7 +407,8 @@ const StaffProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {staff.complaints.map((complaint, index) => (
+                       <p>Coming Soon</p>
+                    {/* {staff.complaints.map((complaint, index) => (
                       <div key={index} className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium">{complaint.issue}</h4>
@@ -327,7 +421,7 @@ const StaffProfile = () => {
                           <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{complaint.notes}</p>
                         )}
                       </div>
-                    ))}
+                    ))} */}
                   </div>
                 </CardContent>
               </Card>
@@ -344,7 +438,7 @@ const StaffProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {staff.attendance.map((record, index) => (
+                    {/* {staff.attendance.map((record, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
                           <h4 className="font-medium">{new Date(record.date).toLocaleDateString()}</h4>
@@ -357,7 +451,8 @@ const StaffProfile = () => {
                           <div className="text-sm text-gray-600">Total Time</div>
                         </div>
                       </div>
-                    ))}
+                    ))} */}
+                       <p>Coming Soon</p>
                   </div>
                 </CardContent>
               </Card>
@@ -374,7 +469,7 @@ const StaffProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {staff.projects.map((project, index) => (
+                    {/* {staff.projects.map((project, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
                           <h4 className="font-medium">{project.name}</h4>
@@ -385,7 +480,9 @@ const StaffProfile = () => {
                           {project.status}
                         </Badge>
                       </div>
-                    ))}
+                    ))} */}
+
+                       <p>Coming Soon</p>
                   </div>
                 </CardContent>
               </Card>

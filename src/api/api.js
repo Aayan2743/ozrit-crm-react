@@ -2,8 +2,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 const api=axios.create({
-   //  baseURL:'http://192.168.80.42:8000/api',
-    baseURL:'http://192.168.31.56:8000/api',
+    baseURL:'http://192.168.80.42:8000/api',
+   //  baseURL:'http://192.168.31.56:8000/api',
      headers: {
         //  "Content-Type": "application/json",
    
@@ -135,9 +135,41 @@ export const get_all_salesTeam= async (id)=>{
      return response;
 }
 
-export function update_project(payload,id) {
-   return api.put(`admin/update-project/${id}`, payload);
+export function update_project(formData) {
+   return api.post(`admin/project-update`, formData);
 }
+
+
+export function create_staff(payload){
+   return api.post('admin/create-staff',payload);
+}
+
+export function get_all_staffs(){
+   return api.get(`admin/all-staff`);
+}
+
+export function get_all_staff(id){
+   return api.get(`admin/all-staff/${id}`);
+}
+
+export function update_staff(payload){
+   return api.post('admin/update-staff',payload);
+}
+
+export function delete_staff(payload){
+   return api.delete(`admin/delete-staff/${payload}`);
+}
+
+export function create_task(payload){
+   return api.post('admin/create-task',payload);
+}
+
+
+//create-task
+
+//delete-staff
+
+//update-staff
 //update_project
 // rojects-stage-update
 

@@ -17,21 +17,24 @@ import { useToast } from "@/hooks/use-toast";
 import {create_staff} from '../api/api';
  import { useRef } from "react";
 
-
+import {update_staff} from '../api/api';
 // inside your component
 
 
-const AddStaffModal = ({ isOpen, onClose }) => {
+const EditStaffModal = ({  staff,  onSave, isOpen, onClose }) => {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const docInputRef=useRef(null);
 
 
+console.log("aaaaaaaa",staff);
+
 
   const [formData, setFormData] = useState({
+    id:"",
     fullName: "",
     email: "",
-    mobileNumbers: [""],
+    mobileNumbers: "",
     employeeId: "",
     role: "",
     department: "",
@@ -43,6 +46,25 @@ const AddStaffModal = ({ isOpen, onClose }) => {
     // profilePreview: null,  
     // documents: []
   });
+
+  useEffect(() => {
+    if (staff) {
+      setFormData({
+        id:staff.id || "",
+        fullName: staff.name || "",
+        email: staff.email || "",
+        mobileNumbers: staff.contact || "",
+        employeeId: staff.employeeId || "",
+        role: staff.role || "",
+        department: staff.department || "",
+        joiningDate: staff.joiningDate || null,
+        shiftStart: staff.shiftStart || "",
+        shiftEnd: staff.shiftEnd || "",
+        notes: staff.notes || "",
+      });
+    }
+  }, [staff]);
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -133,9 +155,9 @@ const AddStaffModal = ({ isOpen, onClose }) => {
 
   
     const add_staff=async()=>{
-          const add_new_staff= await create_staff(formData);
+          const add_new_staff= await update_staff(formData);
       
-          console.log("add staff",add_new_staff.data.status);
+          console.log("add staff",add_new_staff);
 
          
           if(add_new_staff.data.status==false){
@@ -146,7 +168,7 @@ const AddStaffModal = ({ isOpen, onClose }) => {
           }else{
                 toast({
                  title: "Success",
-                description: "Staff member added successfully!",
+                description: add_new_staff.data.message,
                });
 
                 setFormData({
@@ -165,6 +187,7 @@ const AddStaffModal = ({ isOpen, onClose }) => {
                   // documents: []
                 });
                 
+                 onSave();  
                 onClose();
 
           }
@@ -185,7 +208,7 @@ const AddStaffModal = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Staff Member</DialogTitle>
+          <DialogTitle>Edit Staff Member</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -501,7 +524,7 @@ const AddStaffModal = ({ isOpen, onClose }) => {
               Cancel
             </Button>
             <Button type="submit" className="bg-gradient-to-r from-purple-600 to-indigo-600">
-              Add Staff Member
+              Edit Staff Member 
             </Button>
           </div>
         </form>
@@ -510,4 +533,4 @@ const AddStaffModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default AddStaffModal;
+export default EditStaffModal;

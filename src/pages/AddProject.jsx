@@ -400,6 +400,7 @@ const handleSubmit = async (e) => {
       toast.error(response.data.message, { duration: 2000 });
     } else {
       toast.success(response.data.message, { duration: 2000 });
+      navigate('/list-projects')
       // navigate("/dashboard") after a delay if desired
     }
   } catch (err) {
