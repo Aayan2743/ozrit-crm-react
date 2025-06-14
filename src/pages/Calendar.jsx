@@ -3,6 +3,12 @@ import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+// import Sidebar from "@/components/Sidebar";
+import ScheduleMeetModal from "@/components/ScheduleMeetModal";
+import AddTodoModal from "@/components/AddTodoModal";
+
+
+import {list_all_calender} from '../api/api';
 import {
   Popover,
   PopoverContent,
@@ -26,6 +32,8 @@ import {
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("month");
+  const [showScheduleMeetModal, setShowScheduleMeetModal] = useState(false);
+  const [showAddTodoModal, setShowAddTodoModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
     all: true,
     meetings: true,
@@ -35,9 +43,33 @@ const Calendar = () => {
   });
   const [events, setEvents] = useState([]);
 
+  const getCalenderList=async()=>{
+    try{
+        const data=await list_all_calender()
+        console.log("list of calender",data.data.data);
+        setEvents(data.data.data);
+        
+      console.log(typeof data.data.data[5].assignedTo)
+
+             
+    }catch(error){
+        console.error(error);
+    }
+    finally{
+
+    }
+     
+
+  }
+
+
   // Enhanced mock data for calendar events
   useEffect(() => {
     const today = new Date();
+
+    getCalenderList();
+
+
     const mockEvents = [
       // Client Meetings
       {
@@ -252,7 +284,7 @@ const Calendar = () => {
         notes: "Weekly progress update and planning"
       }
     ];
-    setEvents(mockEvents);
+    // setEvents(mockEvents);
   }, []);
 
   const getDaysInMonth = (date) => {
@@ -279,13 +311,19 @@ const Calendar = () => {
   };
 
   const getEventsForDate = (date) => {
+     
     if (!date) return [];
     return events.filter(event => {
       const eventDate = new Date(event.date);
+      
       return eventDate.toDateString() === date.toDateString();
+     
     }).filter(event => selectedFilters[event.type] || selectedFilters.all);
+    // }).filter(event => selectedFilters[event.type])
   };
 
+
+  
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(currentDate.getMonth() + direction);
@@ -350,18 +388,46 @@ const Calendar = () => {
           </Badge>
         </div>
 
-        {event.type === "meeting" && (
-          <div className="space-y-1 text-xs text-gray-600">
-            <p>📅 {event.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-            <p>👥 Staff: {event.staff.join(", ")}</p>
-            {event.notes && <p>📝 {event.notes}</p>}
-            {event.zoomLink && (
-              <Button size="sm" className="mt-2 h-6 text-xs">
-                Join Meeting
-              </Button>
-            )}
-          </div>
-        )}
+              {event.type === "meeting" && (
+                    <div className="space-y-1 text-xs text-gray-600">
+                      <p>📅 {event.date}</p>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {(Array.isArray(event.assignedTo)
+                          ? event.assignedTo
+                          : JSON.parse(event.assignedTo || '[]')  // fallback to empty array if null
+                        ).map((name, index) => (
+                          <span
+                            key={index}
+                            style={{
+                              backgroundColor: '#e0e7ff',
+                              color: '#1e40af',
+                              padding: '4px 8px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                            }}
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+
+                      {event.notes && <p>📝 {event.notes}</p>}
+
+                    {event.zoomLink && (
+                            <a
+                              href={event.zoomLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button size="sm" className="mt-2 h-6 text-xs">
+                                Join Meeting
+                              </Button>
+                            </a>
+                          )}
+                    </div>
+                  )}
+
 
         {event.type === "deadline" && (
           <div className="space-y-1 text-xs text-gray-600">
@@ -396,9 +462,7 @@ const Calendar = () => {
               <Button size="sm" variant="outline" className="h-6 text-xs">
                 Complete
               </Button>
-              <Button size="sm" variant="outline" className="h-6 text-xs">
-                Reassign
-              </Button>
+            
             </div>
           </div>
         )}
@@ -412,7 +476,10 @@ const Calendar = () => {
     "July", "August", "September", "October", "November", "December"
   ];
 
+  // const totalEvents = events.filter(e => selectedFilters[e.type] || selectedFilters.all).length;
   const totalEvents = events.filter(e => selectedFilters[e.type] || selectedFilters.all).length;
+
+
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -515,14 +582,14 @@ const Calendar = () => {
                         </div>
                         
                         <div className="space-y-1">
-                          {dayEvents.slice(0, 2).map(event => (
+                          {dayEvents.slice(0, 1200).map(event => (
                             <Popover key={event.id}>
                               <PopoverTrigger asChild>
                                 <div
                                   className={`${getEventColor(event)} text-white text-xs p-1 rounded cursor-pointer hover:opacity-80 flex items-center space-x-1`}
                                 >
                                   {getEventIcon(event)}
-                                  <span className="truncate">{event.title}</span>
+                                  <span className="truncate">{event.task_title}</span>
                                 </div>
                               </PopoverTrigger>
                               <PopoverContent className="w-80" align="start">
@@ -531,11 +598,7 @@ const Calendar = () => {
                             </Popover>
                           ))}
                           
-                          {dayEvents.length > 2 && (
-                            <div className="text-xs text-gray-500 text-center py-1">
-                              +{dayEvents.length - 2} more
-                            </div>
-                          )}
+                         
                           
                           {dayEvents.length === 0 && day.toDateString() === new Date().toDateString() && (
                             <div className="text-xs text-gray-400 text-center py-2">
@@ -565,28 +628,35 @@ const Calendar = () => {
             </PopoverTrigger>
             <PopoverContent className="w-56" align="end">
               <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button variant="ghost" className="w-full justify-start"  onClick={() => setShowScheduleMeetModal(true)}>
                   <Video className="mr-2 h-4 w-4" />
                   Schedule Meeting
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Target className="mr-2 h-4 w-4" />
-                  Add Deadline
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
+              
+                <Button variant="ghost" className="w-full justify-start"  onClick={() => setShowAddTodoModal(true)}>
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Assign Task
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Clock className="mr-2 h-4 w-4" />
-                  Add Reminder
-                </Button>
+                
               </div>
             </PopoverContent>
           </Popover>
         </div>
       </div>
+
+        <ScheduleMeetModal 
+              isOpen={showScheduleMeetModal} 
+              onClose={() => setShowScheduleMeetModal(false)} 
+            />
+
+
+             <AddTodoModal 
+        isOpen={showAddTodoModal} 
+        onClose={() => setShowAddTodoModal(false)} 
+      />
     </div>
+
+    
   );
 };
 

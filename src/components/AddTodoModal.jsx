@@ -20,6 +20,7 @@ const AddTodoModal = ({ isOpen, onClose }) => {
   const [dueDate, setDueDate] = useState();
   const [priority, setPriority] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [assignedToName, setAssignedToName] = useState("");
   const [linkedProject, setLinkedProject] = useState("");
   const [linkedProjectName, setLinkedProjectName] = useState("");
   const [linkedCustomer, setLinkedCustomer] = useState("");
@@ -91,6 +92,7 @@ const AddTodoModal = ({ isOpen, onClose }) => {
          dueDate : dueDate.replace("T", " ").split(".")[0],
           priority,    // e.g. "High"
           assignedTo,  // optional
+          assignedToName,
           linkedProject,
           linkedProjectName,
           linkedCustomer,
@@ -241,7 +243,13 @@ const AddTodoModal = ({ isOpen, onClose }) => {
               <User className="h-4 w-4 text-green-500" />
               <span>Assign To</span>
             </label>
-            <Select value={assignedTo} onValueChange={setAssignedTo}>
+            {/* <Select value={assignedTo} onValueChange={setAssignedTo}> */}
+            <Select value={assignedTo} onValueChange={(val)=>{
+                setAssignedTo(val);
+                const memberName=staff.find(m=>m.id.toString()===val);
+
+               setAssignedToName(memberName?.name || "dfsdf");
+            }}>
               <SelectTrigger className="h-12 rounded-xl border-green-200">
                 <SelectValue placeholder="Choose team member..." />
               </SelectTrigger>
@@ -257,33 +265,13 @@ const AddTodoModal = ({ isOpen, onClose }) => {
 
           {/* Link to Customer or Project */}
           <div className="grid grid-cols-1 gap-4">
-            {/* <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Link to Customer</label>
-              <Select value={linkedCustomer} onValueChange={setLinkedCustomer}>
-                <SelectTrigger className="h-10 rounded-lg border-green-200">
-                  <SelectValue placeholder="Select customer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id.toString()}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div> */}
-
+          
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 flex items-center space-x-2">
                 <Briefcase className="h-4 w-4 text-green-500" />
                 <span>Link to Project</span>
               </label>
-         {/* onValueChange={(val) => {
-    setLinkedProjectId(val);
-    // find the object:
-    const proj = projects.find(p => p.id.toString() === val);
-    setLinkedProjectName(proj?.projectTitle || "");
-  }} */}
+        
 
          <Select
             value={linkedProject}

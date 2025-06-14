@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,27 +12,67 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
 
+
+import {list_customers,list_projects,get_all_staffs,create_meeting} from '../api/api';
+import { Navigate, useNavigate } from "react-router-dom";
+
+
 const ScheduleMeetModal = ({ isOpen, onClose }) => {
+
+  const navigate=useNavigate();
   const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [selectedCustomerName, setSelectedCustomerName] = useState("");
+  const [customers, setcustomerss] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [date, setDate] = useState();
   const [time, setTime] = useState("");
   const [meetTitle, setMeetTitle] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [meetingLink, setMeetingLink] = useState("");
 
-  const customers = [
-    { id: 1, name: "TechCorp Solutions" },
-    { id: 2, name: "StartupXYZ" },
-    { id: 3, name: "DesignStudio" },
-    { id: 4, name: "E-commerce Plus" },
-  ];
+ const get_staff = async () => {
+  const staff = await get_all_staffs();
 
-  const teamMembers = [
-    { id: 1, name: "John Doe", avatar: "JD" },
-    { id: 2, name: "Sarah Smith", avatar: "SS" },
-    { id: 3, name: "Mike Johnson", avatar: "MJ" },
-    { id: 4, name: "Emily Davis", avatar: "ED" },
-  ];
+  const staffmembers = staff.data.data.map(({ id, name }) => {
+    const formattedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    const avatar = name.charAt(0).toUpperCase();
+
+  
+    return {
+      id,
+      avatar,
+      name: formattedName,
+    };
+  });
+  setTeamMembers(staffmembers)
+  console.log("staff id name only", staffmembers);
+};
+
+   const get_customers=async()=>{
+     const customers=await list_customers()
+      const customerData = customers.data.data.map(({ id, fullName  }) => ({ id, fullName }));
+
+    
+
+  
+     setcustomerss(customerData);
+          
+  }
+
+  
+    useEffect(()=>{
+      get_staff();
+      get_customers();
+    
+  
+    },[])
+
+
+
+
+
+
+
 
   const timeSlots = [
     "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
@@ -55,19 +95,59 @@ const ScheduleMeetModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    const customerName = customers.find(c => c.id === parseInt(selectedCustomer))?.name;
-    const formattedDate = format(date, "MMM dd, yyyy");
+    const customerName = customers.find(c => c.id === parseInt(selectedCustomer))?.fullName;
+    const formattedDate = format(date, "yyyy-MM-dd");
     
-    toast.success(`Meeting Scheduled with ${customerName} on ${formattedDate} at ${time} 📆`);
     
-    // Reset form
-    setSelectedCustomer("");
-    setDate();
-    setTime("");
-    setMeetTitle("");
-    setSelectedMembers([]);
-    setMeetingLink("");
-    onClose();
+    const payload={
+        type:'meeting',
+        selectedCustomer,
+        selectedCustomerName,
+        date:formattedDate,
+        meetTitle,
+        
+       selectedMembers: JSON.stringify(selectedMembers.map(member => member.name)),
+       
+        meetingLink
+    }
+
+  
+
+    console.log("payload" ,payload)
+
+
+    const meeting_create=async(payload)=>{
+      const add_meeting= await create_meeting(payload);
+
+      if(add_meeting.data.status==true){
+          toast.success(`Meeting Scheduled with ${selectedCustomerName} on ${formattedDate} at ${time} 📆`);
+           setSelectedCustomer("");
+                setDate();
+                setTime("");
+                setMeetTitle("");
+                setSelectedMembers([]);
+                setMeetingLink("");
+                onClose();
+
+                navigate('/calendar')
+            window.location.reload();
+      }else {
+          toast.error(add_meeting.data.message);
+      }
+      console.log(add_meeting);
+    }
+    meeting_create(payload);
+
+    // toast.success(`Meeting Scheduled with ${customerName} on ${formattedDate} at ${time} 📆`);
+    
+    // // Reset form
+    // setSelectedCustomer("");
+    // setDate();
+    // setTime("");
+    // setMeetTitle("");
+    // setSelectedMembers([]);
+    // setMeetingLink("");
+    // onClose();
   };
 
   return (
@@ -92,14 +172,19 @@ const ScheduleMeetModal = ({ isOpen, onClose }) => {
               <Users className="h-4 w-4 text-purple-500" />
               <span>Select Customer *</span>
             </label>
-            <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+            {/* <Select value={selectedCustomer} onValueChange={setSelectedCustomer}> */}
+            <Select value={selectedCustomer} onValueChange={(val)=>{
+              setSelectedCustomer(val)
+                const name=customers.find(f=>f.id.toString()==val);
+                setSelectedCustomerName(name.fullName);
+            }}>
               <SelectTrigger className="h-12 rounded-xl border-purple-200 focus:ring-purple-500 focus:border-purple-500">
                 <SelectValue placeholder="Choose a customer..." />
               </SelectTrigger>
               <SelectContent>
                 {customers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id.toString()}>
-                    {customer.name}
+                    {customer.fullName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -122,7 +207,7 @@ const ScheduleMeetModal = ({ isOpen, onClose }) => {
                       !date && "text-muted-foreground"
                     )}
                   >
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    {date ? format(date, "yyyy-MM-dd") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">

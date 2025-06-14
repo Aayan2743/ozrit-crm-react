@@ -57,11 +57,18 @@ export const customer_store= async (payload)=>{
 }
 
 
+
 export const list_customers= async ()=>{
      const response= await api.get('admin/list-customer');
      return response;
 }
 
+
+
+export const list_project_by_customer_id=async(id)=>{
+    const response= await api.get(`admin/list-project-by-customer-id/${id}`);
+     return response;
+}
 
 export const delete_customer= async (id)=>{
      const response= await api.delete(`admin/delete-customer/${id}`);
@@ -164,7 +171,16 @@ export function create_task(payload){
    return api.post('admin/create-task',payload);
 }
 
+export function list_all_calender(){
+   return api.get('admin/list-all-calender');
+}
 
+export function create_meeting(payload){
+   return api.post('admin/create-meeting',payload);
+}
+
+//create-meeting
+//list-all-calender
 //create-task
 
 //delete-staff

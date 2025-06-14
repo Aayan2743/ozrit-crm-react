@@ -121,7 +121,23 @@ export const router = createBrowserRouter([
       
       },
 
+ {
+        path: "invoices",
+        element: <InvoiceList />,
+      
+      },
+       {
+        path: "add-invoice",
+        element: <AddInvoice />,
 
+      },
+      {
+        path: "/invoice/:id",
+        element: <InvoiceView />,
+
+      },
+
+      
        {
         path: "/logout",
         element: <Logout />

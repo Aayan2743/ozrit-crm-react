@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +10,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import {list_project_by_customer_id,list_customers} from '../api/api';
 
 const AddInvoice = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [customers,setCustomer]=useState([]);
+   const get_customers=async()=>{
+       const customers=await list_customers()
+        const customerData = customers.data.data.map(({ id, fullName  }) => ({ id, fullName }));
+   
+    setCustomer(customerData)
+    }
   
+      useEffect(()=>{
+         
+          get_customers();
+        
+      
+        },[])
+
+
   const [formData, setFormData] = useState({
     customer: "",
     project: "",
@@ -25,16 +41,38 @@ const AddInvoice = () => {
     status: "Unpaid"
   });
 
+
+  const fetchProjectsByCustomerId = async (customerId) => {
+  try {
+     
+      const intCustomerId = parseInt(customerId);
+          
+    const res = await list_project_by_customer_id(intCustomerId)
+    const projects = res.data;
+    console.log("dkjfhdfkjghdfjkghdf",projects)
+    // setCustomerProjects(projects);
+
+    // // Optional: auto-select first project
+    // setFormData((prev) => ({
+    //   ...prev,
+    //   project: projects[0]?.id?.toString() || "",
+    // }));
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    // setCustomerProjects([]);
+  }
+};
+
   const [services, setServices] = useState([
     { name: "", qty: 1, unitPrice: 0, total: 0 }
   ]);
 
   // Mock data
-  const customers = [
-    { id: 1, name: "Tech Startup Inc" },
-    { id: 2, name: "Digital Agency" },
-    { id: 3, name: "Restaurant Chain" }
-  ];
+  // const customers = [
+  //   { id: 1, name: "Tech Startup Inc" },
+  //   { id: 2, name: "Digital Agency" },
+  //   { id: 3, name: "Restaurant Chain" }
+  // ];
 
   const projects = [
     { id: 1, name: "E-commerce Website", customerId: 1 },
@@ -143,14 +181,17 @@ const AddInvoice = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="customer">Customer *</Label>
-                    <Select value={formData.customer} onValueChange={(value) => setFormData({...formData, customer: value})}>
+                    <Select value={formData.customer} onValueChange={(value) => {
+                        setFormData({ ...formData, customer: value, project: "" });
+                        fetchProjectsByCustomerId(value); // 🔁 call API on change
+                      }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select customer" />
                       </SelectTrigger>
                       <SelectContent>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id.toString()}>
-                            {customer.name}
+                            {customer.fullName}
                           </SelectItem>
                         ))}
                       </SelectContent>
