@@ -12,10 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import {list_project_by_customer_id,list_customers} from '../api/api';
 
+import {create_invoice} from '../api/api';
+
 const AddInvoice = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [customers,setCustomer]=useState([]);
+  const [projects,setCustomerProjects]=useState([]);
    const get_customers=async()=>{
        const customers=await list_customers()
         const customerData = customers.data.data.map(({ id, fullName  }) => ({ id, fullName }));
@@ -48,9 +51,12 @@ const AddInvoice = () => {
       const intCustomerId = parseInt(customerId);
           
     const res = await list_project_by_customer_id(intCustomerId)
-    const projects = res.data;
-    console.log("dkjfhdfkjghdfjkghdf",projects)
-    // setCustomerProjects(projects);
+    const projects = res.data.data;
+
+    const project=projects.map(({id,projectTitle})=>({id,projectTitle }))
+    
+    console.log("dkjfhdfkjghdfjkghdf",project)
+    setCustomerProjects(project);
 
     // // Optional: auto-select first project
     // setFormData((prev) => ({
@@ -74,7 +80,7 @@ const AddInvoice = () => {
   //   { id: 3, name: "Restaurant Chain" }
   // ];
 
-  const projects = [
+  const projects1 = [
     { id: 1, name: "E-commerce Website", customerId: 1 },
     { id: 2, name: "Portfolio Website", customerId: 2 },
     { id: 3, name: "Food Delivery App", customerId: 3 }
@@ -133,20 +139,44 @@ const AddInvoice = () => {
     }
 
     // Simulate save
-    console.log("Invoice Data:", {
-      ...formData,
+    // console.log("Invoice Data:", {
+    //   ...formData,
+    //   services,
+    //   totalAmount: calculateGrandTotal(),
+    //   balance: calculateBalance()
+    // });
+
+    const payload={
+       ...formData,
       services,
       totalAmount: calculateGrandTotal(),
-      balance: calculateBalance()
-    });
+      balance: calculateBalance() 
+    }
 
-    toast({
-      title: "Success",
-      description: "Invoice created successfully!"
-    });
+    const createInvoice= async (payload)=>{
+      const response= await create_invoice(payload);
 
-    // Redirect to invoice view (simulated with invoice list for now)
-    navigate("/invoices");
+      if(response.data.status){
+          toast({
+            title: "Success",
+            description: response.data.message
+          });
+
+   
+        navigate("/invoices");
+      }else{
+         toast({
+            title: "error",
+            description: response.data.message
+          });
+      }
+    
+
+    }
+
+    createInvoice(payload);
+
+  
   };
 
   return (
@@ -206,7 +236,7 @@ const AddInvoice = () => {
                       <SelectContent>
                         {projects.map((project) => (
                           <SelectItem key={project.id} value={project.id.toString()}>
-                            {project.name}
+                            {project.projectTitle}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -316,7 +346,7 @@ const AddInvoice = () => {
                       ₹{calculateGrandTotal().toLocaleString()}
                     </div>
                   </div>
-                  <div>
+                  {/* <div>
                     <Label htmlFor="advancePaid">Advance Paid (₹)</Label>
                     <Input
                       type="number"
@@ -325,15 +355,15 @@ const AddInvoice = () => {
                       value={formData.advancePaid}
                       onChange={(e) => setFormData({...formData, advancePaid: parseFloat(e.target.value) || 0})}
                     />
-                  </div>
-                  <div>
+                  </div> */}
+                  {/* <div>
                     <Label>Balance</Label>
                     <div className={`h-10 flex items-center px-3 border rounded-md font-semibold ${
                       calculateBalance() > 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
                     }`}>
                       ₹{calculateBalance().toLocaleString()}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

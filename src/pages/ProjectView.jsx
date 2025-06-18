@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {list_project,update_stage,update_hosting_stage,update_stage_update,update_document,delete_document} from '../api/api';
+import {list_project,update_stage,update_hosting_stage,update_stage_update,update_document,delete_document,project_status_update} from '../api/api';
 import { useRef } from 'react';
+
+import {  XCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { 
   ArrowLeft,
@@ -50,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 
 
+import { toast } from "sonner";
 const ProjectView = () => {
    const { id } = useParams();
 
@@ -81,7 +84,49 @@ function getInitials(name) {
     .toUpperCase();
 }
 
+  // const [stage, setStage] = useState("");
+  
 
+
+
+const handleDelete=async(id)=>{
+
+  // const delete_doc= await delete_document(id);
+
+  // if(delete_doc.data.status){
+  //       toast.success(delete_doc.data.message);
+  //              await fetchProject(project.id);
+         
+  // }else{
+  //     toast.success(delete_doc.data.message);
+  // }
+
+
+
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: "This document will be permanently deleted!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!',
+  });
+
+  if (result.isConfirmed) {
+    const delete_doc = await delete_document(id);
+
+    if (delete_doc.data.status) {
+    
+      setModalOpen(false);      // Close modal if open
+      setActiveDoc(null);       // Reset document state
+      await fetchProject(project.id); // Refresh data
+    } else {
+    
+    }
+  }
+  // console.log("delkete",delete_doc);
+}
 
 
 
@@ -92,7 +137,7 @@ function getInitials(name) {
     const response = await list_project(id);
     const proj = response.data.data;
 
-       console.log("🔥 list_project response:", response);
+       console.log("dfgfdgdfgdfgdfgdfg:", response);
 
 
     // Parse the JSON‐encoded "assignedTo" field into a real array
@@ -208,27 +253,7 @@ function getInitials(name) {
   });
 
     const [date, setDate] = useState(project.sent_on);
- const handleSubmit = async () => {
-    if (!pdfFile) return;
 
-    const formData = new FormData();
-    formData.append('file', pdfFile);
-
-    try {
-      // Replace with your API endpoint
-      const response = await fetch('/your-api-endpoint', {
-        method: 'POST',
-        body: formData,
-      });
-      if (response.ok) {
-        alert('File uploaded successfully');
-      } else {
-        setError('Upload failed');
-      }
-    } catch (err) {
-      setError('Upload failed');
-    }
-  };
 
   
     
@@ -306,10 +331,12 @@ useEffect(() => {
  
   const getOverallProgress = () => {
     const completedStages = stageDefinitions.filter((_, index) => isStageCompleted(index)).length;
+    console.log("getOverallProgress",getOverallProgress )
     return Math.round((completedStages / stageDefinitions.length) * 100);
   };
 
 
+  getOverallProgress();
 
   const updateStage = async (stageKey, newValue) => {
   if (!project) return;
@@ -388,6 +415,7 @@ useEffect(() => {
       return "bg-gray-500";
   }
 };
+
 
   const getStageStatus = (stage) => {
     switch (stage.toLowerCase()) {
@@ -551,14 +579,102 @@ const formattedDate = `${today.getDate()}-${today.getMonth() + 1}-${today.getFul
 
  
   try {
+
+    if (!selectedFile) {
+        toast.error("PDF file is required.");
+        return;
+      }
+
+       if (!fordata) {
+        toast.error("Please select For.");
+        return;
+      }
+       if (!date) {
+        toast.error("Please select Date.");
+        return;
+      }
     // 2) Call your API helper — adjust signature as needed
     const response = await update_document(
     
       formData
     );
     console.log("✅ update_document response:", response.data);
+    setModalOpen1(false);
 
-    // 3) (Optionally) refresh your project object so UI stays in sync
+     setSelectedFile(null);
+    setforData("");
+    setDate("");
+    setNotes("");
+    setModalOpen1(false); 
+   
+    await fetchProject(project.id);
+  } catch (err) {
+    console.error("❌ update_document failed:", err);
+  }
+
+
+
+  }
+
+
+    const handleElementsgeneral=async ()=>{
+
+
+      console.log("project id",project.id);
+
+    console.log("previre", typeof previewUrl);
+    console.log("file name",typeof fileName);
+    console.log("date name",typeof date);
+    console.log("doc_notes ",typeof doc_notes);
+    console.log("setSelectedFile ",typeof selectedFile);
+    console.log("forpurpose ", fordata);
+
+     const formData = new FormData();
+  // If you stored the real File object in state (e.g. selectedFile), use that:
+  if (previewUrl) {
+    formData.append("document", previewUrl);
+  }
+  // Otherwise you could re-fetch it from your previewUrl, but best is to keep the File..
+const today = new Date();
+const formattedDate = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+// formData.append('sentOn', formattedDate);
+
+
+  formData.append("sentOn", date ?? formattedDate);
+  formData.append("notes", doc_notes ?? "");
+  formData.append("id",   project.id);
+  formData.append("file",   selectedFile);
+  formData.append("forpurpose",   fordata || 'General Documents');
+  //  formData.append('forpurpose', forPurpose || 'General Documents');
+  // formData.append("doc_type",   "Engagement Form");
+     formData.append('doc_type', fordata ? 'Engagement Form' : 'General Documents');
+
+
+ 
+  try {
+
+    if (!selectedFile) {
+        toast.error("PDF file is required.");
+        return;
+      }
+
+      
+    // 2) Call your API helper — adjust signature as needed
+    const response = await update_document(
+    
+      formData
+    );
+    console.log("✅ update_document response:", response.data);
+    setModalOpen1(false);
+
+     setSelectedFile(null);
+    setforData("");
+    setDate("");
+    setNotes("");
+    setModalOpen1(false); 
+   
+
+
     await fetchProject(project.id);
   } catch (err) {
     console.error("❌ update_document failed:", err);
@@ -597,11 +713,37 @@ const formattedDate = `${today.getDate()}-${today.getMonth() + 1}-${today.getFul
  
   try {
     // 2) Call your API helper — adjust signature as needed
+
+    if (!selectedFile) {
+        toast.error("PDF file is required.");
+        return;
+      }
+
+       if (!fordata) {
+        toast.error("Please select For.");
+        return;
+      }
+       if (!date) {
+        toast.error("Please select Date.");
+        return;
+      }
+
+      //date
+
     const response = await update_document(
     
       formData
     );
     console.log("✅ update_document response:", response.data);
+
+    setSelectedFile(null);
+    setforData("");
+    setDate("");
+    setNotes("");
+   
+    // setModalOpen1(false)
+    setModalOpenForAccepatance(false)
+  
 
     // 3) (Optionally) refresh your project object so UI stays in sync
     await fetchProject(project.id);
@@ -642,9 +784,46 @@ setDocumentNotes(notes);
     e.target.value = null;
   };
 
+const calculateProjectProgress = (project) => {
+  let progress = 0;
+
+  if (project.domain === "Booked") progress += 20;
+  if (project.hosting === "Assigned") progress += 20;
+  if (project.design === "Done") progress += 20;
+  if (project.madeLive === "Yes") progress += 20;
+  if (project.balanceAsked === "Yes") progress += 20;
+
+  return progress;
+};
+
+
+ const isComplete = calculateProjectProgress(project) === 100;
+   const [stage, setStage] = useState(project.status || "");
+  
+  
+   const handleChange = async (e) => {
+    const newStage = e.target.value;
+    if (!newStage) {
+       toast.error("Please select a valid stage (Complete or Hold)");
+    // alert("Please select a valid stage (Complete or Hold).");
+    return;
+  }
 
 
 
+    setStage(newStage);
+
+    const paylaod={
+      id:project.id,
+      status:newStage
+    }
+
+     const response= await project_status_update(paylaod);
+    fetchProject(project.id)
+
+    console.log("status",response);
+    // onChangeStage(project.id, newStage); // call parent handler
+  };
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
       <Sidebar />
@@ -683,12 +862,12 @@ setDocumentNotes(notes);
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-600">Overall Progress</span>
-                    <span className="text-sm font-bold text-purple-600">{project.overAllProgress}%</span>
+                    <span className="text-sm font-bold text-purple-600">{calculateProjectProgress(project)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${project.overAllProgress}%` }}
+                      style={{ width: `${calculateProjectProgress(project)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -725,14 +904,26 @@ setDocumentNotes(notes);
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <Link to={`/project-edit/${project.id}`}>
                 <Button className="bg-purple-600 hover:bg-purple-700">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Project
                 </Button>
-                <Button variant="outline">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Add File
-                </Button>
+                  </Link>
+
+
+                     
+                  <select
+      value={stage}
+      onChange={handleChange}
+      className="px-3 py-2 border rounded bg-white text-sm text-gray-700 focus:outline-none focus:ring focus:border-purple-500"
+    >
+      <option value="">Change Stage</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Complete">Complete</option>
+      <option value="Hold">Hold</option>
+    </select>                     
+
               </div>
             </div>
           </div>
@@ -931,11 +1122,15 @@ setDocumentNotes(notes);
                   <CardTitle className="text-lg">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Live Site
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                 
+
+                  <a href={project.domainName} target="_blank" rel="noopener noreferrer">
+                      <Button className="w-full justify-start" variant="outline">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View Live Site
+                      </Button>
+                    </a>
+                   <Button className="w-full justify-start" variant="outline">
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule Meeting
                   </Button>
@@ -1204,7 +1399,7 @@ setDocumentNotes(notes);
                                     <div>
                                       <p className="font-medium text-gray-800">{doc.doc_type}</p>
                                       <p className="text-sm text-gray-600">{doc.doc_name}</p>
-                                 <p className="text-sm text-gray-600">
+                                   <p className="text-sm text-gray-600">
                                             <span
                                               className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
                                                 doc.doc_name === "Engagement Form With Signature"
@@ -1216,7 +1411,7 @@ setDocumentNotes(notes);
                                             </span>{" "}
                                             {doc.sent_on}
                                           </p>
-                                      <p className="text-sm text-gray-600"> {(doc.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                                      <p className="text-sm text-gray-600"> {(doc.file_size / 1024 / 1024).toFixed(2)} MB </p>
 
                                        
                                     </div>
@@ -1300,11 +1495,24 @@ setDocumentNotes(notes);
                                         </Dialog>
 
 
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={() => handleDelete(doc.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+
+
 
 
 
                                  
                                   </div>
+
+                                                                    
+
+
                                 </div>
                               ))}
                             </div>
@@ -1314,7 +1522,7 @@ setDocumentNotes(notes);
                     <div>
                     
 
-                       <Dialog open={modalOpen1} onOpenChange={setModalOpen1}>
+     <Dialog open={modalOpen1} onOpenChange={setModalOpen1}>
         <DialogTrigger asChild>
           <Button
             className="bg-purple-600 hover:bg-purple-700"
@@ -1385,13 +1593,14 @@ setDocumentNotes(notes);
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="mt-1 block w-full border rounded px-2 py-1"
+                  max={new Date().toISOString().split("T")[0]} 
               />
             </div>
 
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Notes
+                Notes (Optional)
               </label>
               <Textarea
                 value={notes}
@@ -1409,7 +1618,7 @@ setDocumentNotes(notes);
             <Button onClick={handleElements}>Submit</Button>
           </DialogFooter>
         </DialogContent>
-                   </Dialog>
+          </Dialog>
 
 
 
@@ -1567,10 +1776,14 @@ setDocumentNotes(notes);
                                         </Dialog>
 
 
+                                      <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={() => handleDelete(doc.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
 
-
-
-                                  
                                   </div>
                                 </div>
                               ))}
@@ -1605,6 +1818,7 @@ setDocumentNotes(notes);
               </label>
               <input
                 type="file"
+                required
                 accept="application/pdf"
                 onChange={onFileChange}
                 className="mt-1"
@@ -1649,6 +1863,7 @@ setDocumentNotes(notes);
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="mt-1 block w-full border rounded px-2 py-1"
+                 max={new Date().toISOString().split("T")[0]}
               />
             </div>
 
@@ -1787,26 +2002,14 @@ setDocumentNotes(notes);
 
           
             {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                File Name
-              </label>
-             <input
-                  type="text"
-                      value={filenamenotes}
-                      onChange={(e) => filenamedetails(e.target.value)}
-                      className="mt-1 w-full border rounded-md p-2 focus:outline-none focus:ring focus:ring-blue-500"
-                      placeholder="Your text here..."
-                      required
-                />
-            </div>
+            
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen1(false)}>
               Cancel
             </Button>
-            <Button onClick={handleElements}>Submit</Button>
+            <Button onClick={handleElementsgeneral}>Submit</Button>
           </DialogFooter>
         </DialogContent>
                    </Dialog>

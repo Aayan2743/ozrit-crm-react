@@ -40,7 +40,7 @@ const AllProjects = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("cards");
   const [showFilters, setShowFilters] = useState(false);
-
+const [loading, setLoading] = useState(false);
 
 
   const [projects,setProjects]=useState([]);
@@ -65,7 +65,7 @@ useEffect(() => {
     const load = async () => {
       try {
         const data = await fetchProjects();     // 1) wait for API call
-        console.log("fgdfgfd",data);
+        console.log("all projects",data);
        
         if (Array.isArray(data)) {             // 2) make sure it’s actually an array
           setProjects(data);                   // 3) update your state
@@ -82,7 +82,19 @@ useEffect(() => {
   }, []);   
 
 
+  const calculateProjectProgress = (project) => {
+  let progress = 0;
+      console.log("dfgjdfg",project);
+  if (project.domain === "Booked") progress += 20;
+  if (project.hosting === "Assigned") progress += 20;
+  if (project.design === "Done") progress += 20;
+  if (project.madeLive === "Yes") progress += 20;
+  if (project.balanceAsked === "Yes") progress += 20;
 
+  return progress;
+};
+
+console.log("calculateProjectProgress",calculateProjectProgress(projects))
 
   const getDeadlineStatus = (deadline) => {
     const today = new Date();
@@ -442,9 +454,9 @@ useEffect(() => {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-600">Progress</span>
-                      <span className="text-sm font-medium text-gray-800">{project.progress}%</span>
+                      <span className="text-sm font-medium text-gray-800">{calculateProjectProgress(project)}%</span>
                     </div>
-                    <Progress value={project.progress} className="h-2" />
+                    <Progress value={calculateProjectProgress(project)} className="h-2" />
                   </div>
 
                   {/* Assigned Team */}

@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 
 const api=axios.create({
     baseURL:'http://192.168.80.42:8000/api',
+   //  baseURL:'https://apicrm.ozrit.com/public/api',
    //  baseURL:'http://192.168.31.56:8000/api',
      headers: {
         //  "Content-Type": "application/json",
@@ -179,6 +180,71 @@ export function create_meeting(payload){
    return api.post('admin/create-meeting',payload);
 }
 
+export function create_invoice(payload){
+   return api.post('admin/create-invoice',payload);
+}
+
+
+export function list_invoice(){
+   return api.get('admin/list-invoice');
+}
+
+export function list_invoice_id(id){
+   return api.get(`admin/list-invoice/${id}`);
+}
+
+
+export function list_invoice_ids(id){
+   return api.get(`admin/list-invoices/${id}`);
+}
+
+
+export function create_payment(formData) {
+
+  return api.post('admin/create-payment', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+}
+
+export function invoices_update(id,payload){
+   return api.put(`admin/invoices-update/${id}`,payload);
+}
+
+
+export function create_expanses(payload){
+   return api.post('admin/create-expanses',payload);
+}
+
+export function list_expanses(){
+   return api.get('admin/list-expanses');
+}
+
+export function analyticss(){
+   return api.get('admin/analytics');
+}
+
+export function getOverview(){
+   return api.get('admin/getOverview');
+}
+
+export function project_status_update(payload){
+   return api.post('admin/project-status-update',payload);
+}
+
+
+
+//project-status-update
+
+
+
+
+//list-expanses
+
+//create-expanses
+//invoices-update
+//create-invoice
 //create-meeting
 //list-all-calender
 //create-task

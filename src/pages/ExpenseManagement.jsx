@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -62,6 +63,10 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import AddExpenseModal from "@/components/AddExpenseModal";
+import EditExpenseModal from "@/components/EditExpenseModal";
+
+import {list_expanses,analyticss} from '../api/api';
+
 
 const ExpenseManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -69,9 +74,58 @@ const ExpenseManagement = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expenses, setexpenses] = useState([]);
+  const [monthlyExpenseData,setmonthlyExpenseData] = useState([]);
+  const [categoryData,setcategoryData] = useState([]);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const [selectedExpense, setSelectedExpense] = useState(null);
+
+  const getexpanses=async ()=>{
+    try{
+        const expanses= await list_expanses();
+        console.log('eee',expanses.data.expanses);
+
+        setexpenses(expanses.data.expanses);
+
+    }catch(err){
+      console.error(err);
+    }finally{
+
+    }
+    
+
+  }
+
+    const getanalytics=async ()=>{
+    try{
+        const analytics= await analyticss();
+        console.log('analytics',analytics.data);
+      setmonthlyExpenseData(analytics.data.monthlyExpenseData);
+      setcategoryData(analytics.data.categoryData)
+        
+
+    }catch(err){
+      console.error(err);
+    }finally{
+
+    }
+    
+
+  }
+
+  //analytics
+
+  useEffect(()=>{
+    getexpanses();
+    getanalytics();
+  },[])
+  
+
+
 
   // Demo data for expenses
-  const expenses = [
+  const expenses1 = [
     {
       id: 1,
       title: "Domain for Sai Garments",
@@ -140,7 +194,7 @@ const ExpenseManagement = () => {
   ];
 
   // Analytics data
-  const monthlyExpenseData = [
+  const monthlyExpenseData1 = [
     { month: "Jan", expenses: 15000, revenue: 45000 },
     { month: "Feb", expenses: 18000, revenue: 52000 },
     { month: "Mar", expenses: 16000, revenue: 48000 },
@@ -149,7 +203,7 @@ const ExpenseManagement = () => {
     { month: "Jun", expenses: 17000, revenue: 68000 },
   ];
 
-  const categoryData = [
+  const categoryData1 = [
     { name: "Hosting", value: 8500, color: "#8b5cf6" },
     { name: "Software", value: 6200, color: "#06b6d4" },
     { name: "Design Outsource", value: 12000, color: "#10b981" },
@@ -163,9 +217,23 @@ const ExpenseManagement = () => {
   };
 
   // Calculate summary metrics
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  const totalExpenses = expenses.reduce((sum, exp) => parseInt(sum) + parseInt(exp.amount), 0);
+
+// Format as INR currency
+const formattedTotal = totalExpenses.toLocaleString('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+});
+
+
+
   const unpaidExpenses = expenses.filter(exp => exp.status === "pending");
-  const unpaidAmount = unpaidExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  console.log('unpaidExpenses',unpaidExpenses);
+
+  const unpaidAmount = unpaidExpenses.reduce((sum, exp) =>parseInt(sum)  + parseInt(exp.amount) , 0);
   const overdueExpenses = unpaidExpenses.filter(exp => new Date(exp.dueDate) < new Date());
   const dueSoonExpenses = unpaidExpenses.filter(exp => {
     const dueDate = new Date(exp.dueDate);
@@ -441,7 +509,7 @@ const ExpenseManagement = () => {
                       <TableHead>Expense Title</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Category</TableHead>
-                      <TableHead>Project/Client</TableHead>
+                      {/* <TableHead>Project/Client</TableHead> */}
                       <TableHead>Status</TableHead>
                       <TableHead>Due Date</TableHead>
                       <TableHead>Bill</TableHead>
@@ -461,7 +529,7 @@ const ExpenseManagement = () => {
                         <TableCell>
                           <Badge variant="outline">{expense.category}</Badge>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           {expense.project ? (
                             <div>
                               <p className="text-sm font-medium">{expense.project}</p>
@@ -470,19 +538,19 @@ const ExpenseManagement = () => {
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell>{getStatusBadge(expense)}</TableCell>
                         <TableCell>
-                          {expense.dueDate ? (
-                            <span className={new Date(expense.dueDate) < new Date() ? "text-red-600 font-medium" : ""}>
-                              {expense.dueDate}
+                          {expense.due_date ? (
+                            <span className={new Date(expense.due_date) < new Date() ? "text-red-600 font-medium" : ""}>
+                              {expense.due_date}
                             </span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          {expense.hasBill ? (
+                          {expense.has_bill ? (
                             <Button size="sm" variant="outline" className="gap-1">
                               <Eye className="h-3 w-3" />
                               View
@@ -493,7 +561,10 @@ const ExpenseManagement = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => {
+                                        setSelectedExpense(expense); // pass expense object you want to edit
+                                        setIsEditModalOpen(true);
+                                      }}>
                               <Edit className="h-3 w-3" />
                             </Button>
                             <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">

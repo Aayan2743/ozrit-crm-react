@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +9,92 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AddPaymentModal from "../components/AddPaymentModal";
 import { Plus, Eye, Edit, Download, DollarSign, Search, Filter } from "lucide-react";
-
+import {list_invoice} from '../api/api';
 const InvoiceList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [invoices, setInvoice] = useState([]);
+
+    const [loading, setLoading] = useState(false);
+
+
+  const get_invoice=async ()=>{
+    try{
+      setLoading(true)
+         const invoice=await list_invoice()
+      console.log("invoice",invoice.data) 
+
+      setInvoice(invoice.data.invoice);
+
+    }catch(error){
+      console.error(error);
+       setLoading(false)
+    }finally{
+       setLoading(false)
+    }
+   
+
+  }
+
+
+  useEffect(()=>{
+    get_invoice();
+  },[]);
+  
+
+
+
+
+
+
+
+
+ if (loading) {
+    return (
+      <>
+        {/* Inline CSS for the spinner */}
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .spinner-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .spinner {
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              width: 48px;
+              height: 48px;
+              animation: spin 1s linear infinite;
+            }
+            .spinner-text {
+              margin-top: 0.75rem;
+              font-size: 1rem;
+              color: #555;
+            }
+          `}
+        </style>
+        <div className="spinner-container">
+          <div className="spinner"></div>
+          <div className="spinner-text">Loading Invoice</div>
+        </div>
+      </>
+    );
+  }
+
+
 
   // Mock invoice data
-  const invoices = [
+  const invoices1 = [
     {
       id: 1,
       invoiceNumber: "INV-2024-001",
@@ -86,9 +163,12 @@ const InvoiceList = () => {
   };
 
   const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.project.toLowerCase().includes(searchTerm.toLowerCase());
+
+    console.log("fdkgjhdfjkgdfjhdfd",invoice)
+     const idStr = invoice.id.toString();
+    const matchesSearch = idStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.customer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.project.projectTitle.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || invoice.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -96,7 +176,7 @@ const InvoiceList = () => {
   // Calculate metrics
   const totalInvoices = invoices.length;
   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const totalPaid = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
+  const totalPaid = invoices.reduce((sum, inv) => sum + inv.advancePaid, 0);
   const totalOutstanding = invoices.reduce((sum, inv) => sum + inv.balance, 0);
   const overdueCount = invoices.filter(inv => inv.status === "Overdue").length;
   const overdueValue = invoices.filter(inv => inv.status === "Overdue").reduce((sum, inv) => sum + inv.balance, 0);
@@ -206,15 +286,15 @@ const InvoiceList = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
                       <div>
-                        <div className="font-semibold text-lg">{invoice.invoiceNumber}</div>
-                        <Link to={`/customer/${invoice.id}`} className="text-blue-600 hover:underline">
-                          {invoice.customer}
+                        <div className="font-semibold text-lg">{invoice.id}</div>
+                        <Link to={`/customer/${invoice.customer.id}`} className="text-blue-600 hover:underline">
+                          {invoice.customer.fullName}
                         </Link>
-                        <div className="text-sm text-gray-600">{invoice.project}</div>
+                        <div className="text-sm text-gray-600">{invoice.project.projectTitle}</div>
                       </div>
                       <div>
                         <div className="text-sm text-gray-600">Issue Date</div>
-                        <div className="font-medium">{invoice.issueDate}</div>
+                        <div className="font-medium">{invoice.invoiceDate}</div>
                       </div>
                       <div>
                         <div className="text-sm text-gray-600">Due Date</div>
@@ -226,7 +306,7 @@ const InvoiceList = () => {
                         <div className="text-sm text-gray-600">Amount</div>
                         <div className="font-semibold">₹{invoice.totalAmount.toLocaleString()}</div>
                         <div className="text-sm">
-                          <span className="text-green-600">Paid: ₹{invoice.paidAmount.toLocaleString()}</span>
+                          <span className="text-green-600">Paid: ₹{invoice.advancePaid.toLocaleString()}</span>
                           {invoice.balance > 0 && (
                             <span className="text-red-600 ml-2">Balance: ₹{invoice.balance.toLocaleString()}</span>
                           )}
@@ -244,9 +324,12 @@ const InvoiceList = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
+                     <Link to={`/edit-invoice/${invoice.id}`}>
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4" />
                       </Button>
+                      </Link>
+
                       {invoice.balance > 0 && (
                         <Button 
                           variant="outline" 

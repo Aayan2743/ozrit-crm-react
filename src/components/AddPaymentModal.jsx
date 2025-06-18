@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import {create_payment} from '../api/api';
 
 const AddPaymentModal = ({ isOpen, onClose, invoice }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -53,17 +54,73 @@ const AddPaymentModal = ({ isOpen, onClose, invoice }) => {
     }
   };
 
-  const handleSubmit = () => {
-    // Simulate payment processing
-    console.log("Payment Data:", paymentData);
+  // const handleSubmit = () => {
+  //   // Simulate payment processing
+  //   console.log("Payment Data:", paymentData);
     
-    toast({
-      title: "Success",
-      description: `₹${paymentData.amount.toLocaleString()} added to invoice ${invoice?.invoiceNumber} ✅`
-    });
+  //   toast({
+  //     title: "Success",
+  //     description: `₹${paymentData.amount.toLocaleString()} added to invoice ${invoice?.invoiceNumber} ✅`
+  //   });
 
-    handleClose();
-  };
+  //   handleClose();
+  // };
+
+
+
+
+const handleSubmit = async () => {
+  // 1) client-side validation
+  if (!paymentData.amount || !paymentData.paymentDate || !paymentData.paymentMode) {
+    toast({
+      title: 'Error',
+      description: 'Please fill in all required fields.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  // 2) build your FormData
+  const formData = new FormData();         // ← declare here
+  formData.append('invoice_id', invoice.id);
+  formData.append('project_id', invoice.project_id);
+  formData.append('payment_date', paymentData.paymentDate);
+  formData.append('amount', paymentData.amount);
+  formData.append('payment_mode', paymentData.paymentMode);
+  formData.append('payment_proof', paymentData.hasProof ? 1 : 0);
+  if (paymentData.hasProof && paymentData.screenshot) {
+    formData.append('payment_file', paymentData.screenshot);
+  }
+
+
+  try {
+    // 3) send via your helper
+    const res = await create_payment(formData);
+
+    if (res.data.status) {
+      toast({
+        title: 'Success',
+        description: `₹${paymentData.amount.toLocaleString()} added to invoice ${invoice.invoiceNumber} ✅`,
+      });
+      handleClose();
+
+      // 4) optionally refresh the invoice details
+      // const fresh = await list_invoice_id(invoice.id);
+      // setInvoice(fresh.data.invoice);
+    } else {
+      throw new Error(res.data.message);
+    }
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: 'Upload Failed',
+      description: err.response?.data?.message || err.message,
+      variant: 'destructive',
+    });
+  }
+};
+
+ 
 
   if (!invoice) return null;
 

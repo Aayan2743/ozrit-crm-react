@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,13 +8,50 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AddPaymentModal from "../components/AddPaymentModal";
 import { Download, Edit, DollarSign, ArrowLeft, Eye } from "lucide-react";
+import {list_invoice_id} from '../api/api';
+
 
 const InvoiceView = () => {
   const { id } = useParams();
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [invoice, setinvoice] = useState(false);
+   const [loading, setLoading] = useState(false);
+
+
+  const get_invoice = async (id) => {
+  try {
+
+    setLoading(true)
+    const response = await list_invoice_id(id);
+    const invoice = response.data.invoice;
+
+    // Parse services JSON into a real array
+
+
+     if (typeof invoice.services === 'string') {
+      invoice.services = JSON.parse(invoice.services);
+    }
+
+    setinvoice(invoice);
+
+    console.log('my invoice', invoice);
+  } catch (err) {
+    console.error('Failed to load invoice', err);
+    // handle error…
+      setLoading(false)
+  }finally{
+      setLoading(false)
+  }
+}
+
+  useEffect(()=>{
+    get_invoice(id);
+
+  },[])
+
 
   // Mock invoice data
-  const invoice = {
+  const invoice1 = {
     id: 1,
     invoiceNumber: "INV-2024-001",
     customer: {
@@ -70,12 +107,54 @@ const InvoiceView = () => {
     }
   };
 
+
+     if (loading) {
+    return (
+      <>
+        {/* Inline CSS for the spinner */}
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .spinner-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .spinner {
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              width: 48px;
+              height: 48px;
+              animation: spin 1s linear infinite;
+            }
+            .spinner-text {
+              margin-top: 0.75rem;
+              font-size: 1rem;
+              color: #555;
+            }
+          `}
+        </style>
+        <div className="spinner-container">
+          <div className="spinner"></div>
+          <div className="spinner-text">Loading Invoice</div>
+        </div>
+      </>
+    );
+  }
+
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       
       <div className="flex-1 p-8">
-        <div className="max-w-5xl mx-auto">
+        <div className=" mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
@@ -91,7 +170,7 @@ const InvoiceView = () => {
                   <Badge variant={getStatusBadgeVariant(invoice.status)}>
                     {invoice.status}
                   </Badge>
-                  <span className="text-gray-600">Issue Date: {invoice.issueDate}</span>
+                  <span className="text-gray-600">Issue Date: {invoice.invoiceDate}</span>
                   <span className="text-gray-600">Due Date: {invoice.dueDate}</span>
                 </div>
               </div>
@@ -101,10 +180,13 @@ const InvoiceView = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </Button>
+
+               <Link to={`/edit-invoice/${invoice.id}`}>
               <Button variant="outline">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Invoice
               </Button>
+              </Link>
               {invoice.balance > 0 && (
                 <Button onClick={() => setPaymentModalOpen(true)}>
                   <DollarSign className="h-4 w-4 mr-2" />
@@ -127,15 +209,15 @@ const InvoiceView = () => {
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Customer Information</h4>
                       <div className="space-y-1 text-sm">
-                        <div><span className="font-medium">Name:</span> {invoice.customer.name}</div>
-                        <div><span className="font-medium">Email:</span> {invoice.customer.email}</div>
-                        <div><span className="font-medium">Phone:</span> {invoice.customer.phone}</div>
+                        <div><span className="font-medium">Name:</span>  {invoice.customer?.fullName ?? 'N/A'}</div>
+                        <div><span className="font-medium">Email:</span> {invoice.customer?.email ?? 'N/A'}</div>
+                        <div><span className="font-medium">Phone:</span> {invoice.customer?.mobile ?? 'N/A'}</div>
                       </div>
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Project Information</h4>
                       <div className="space-y-1 text-sm">
-                        <div><span className="font-medium">Project:</span> {invoice.project}</div>
+                        {/* <div><span className="font-medium">Project:</span> {invoice.project}</div> */}
                         <div><span className="font-medium">Invoice Date:</span> {invoice.issueDate}</div>
                         <div><span className="font-medium">Due Date:</span> {invoice.dueDate}</div>
                       </div>
@@ -159,15 +241,23 @@ const InvoiceView = () => {
                         <TableHead className="text-right">Total</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {invoice.services.map((service, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{service.name}</TableCell>
-                          <TableCell className="text-center">{service.qty}</TableCell>
-                          <TableCell className="text-right">₹{service.unitPrice.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">₹{service.total.toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
+                   
+                     
+                     <TableBody>
+                   
+                          {(invoice?.services ?? []).map((service, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{service.name}</TableCell>
+                                <TableCell className="text-center">{service.qty}</TableCell>
+                                <TableCell className="text-right">
+                                  ₹{Number(service.unitPrice ?? 0).toLocaleString()}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  ₹{Number(service.total ?? 0).toLocaleString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -179,7 +269,7 @@ const InvoiceView = () => {
                   <CardTitle>Payment History</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {paymentHistory.length > 0 ? (
+                  {invoice?.payments?.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -191,14 +281,14 @@ const InvoiceView = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {paymentHistory.map((payment) => (
+                        {invoice.payments.map((payment) => (
                           <TableRow key={payment.id}>
-                            <TableCell>{payment.date}</TableCell>
+                            <TableCell>{payment.payment_date}</TableCell>
                             <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
-                            <TableCell>{payment.mode}</TableCell>
-                            <TableCell>{payment.staff}</TableCell>
+                            <TableCell>{payment.payment_mode}</TableCell>
+                            <TableCell>{payment.updated_by}</TableCell>
                             <TableCell>
-                              {payment.hasScreenshot ? (
+                              {payment.payment_proof ? (
                                 <Button variant="outline" size="sm">
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -227,17 +317,19 @@ const InvoiceView = () => {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Amount:</span>
-                    <span className="font-semibold">₹{invoice.totalAmount.toLocaleString()}</span>
+                    <span className="font-semibold">₹  {Number(invoice.totalAmount ?? 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Advance Paid:</span>
-                    <span className="font-semibold text-green-600">₹{invoice.advancePaid.toLocaleString()}</span>
+                    <span className="font-semibold text-green-600">₹ {Number(invoice.advancePaid ?? 0).toLocaleString()}  </span>
                   </div>
+
+                 
                   <hr />
                   <div className="flex justify-between">
                     <span className="text-gray-600">Balance:</span>
                     <span className={`font-bold text-lg ${invoice.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      ₹{invoice.balance.toLocaleString()}
+                      ₹ {Number(invoice.balance ?? 0).toLocaleString()} 
                     </span>
                   </div>
                   <Badge variant={getStatusBadgeVariant(invoice.status)} className="w-full justify-center">

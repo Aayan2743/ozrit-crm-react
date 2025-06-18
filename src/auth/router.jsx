@@ -31,9 +31,12 @@ import StaffList from "../pages/StaffList";
 import StaffProfile from "../pages/StaffProfile";
 import InvoiceList from "../pages/InvoiceList";
 import InvoiceView from "../pages/InvoiceView";
+import UpdateInvoice from "../pages/UpdateInvoice";
+import ComingSoon from "../pages/ComingSoon";
 import AddInvoice from "../pages/AddInvoice";
 import NotFound from "../pages/NotFound";
 import EditCustomer from "../pages/EditCustomer";
+
 
 
 import {list_customers} from '../api/api';
@@ -137,6 +140,30 @@ export const router = createBrowserRouter([
 
       },
 
+       {
+        path: "/edit-invoice/:id",
+        element: <UpdateInvoice />,
+
+      },
+         {
+        path: "/expenses",
+        element: <ExpenseManagement />,
+
+      },
+
+      {
+        path: "/analytics",
+        element: <ComingSoon />,
+
+      },
+
+        {
+        path: "/settings",
+        element: <ComingSoon />,
+
+      },
+
+      
       
        {
         path: "/logout",

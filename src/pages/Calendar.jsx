@@ -31,6 +31,7 @@ import {
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+    const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("month");
   const [showScheduleMeetModal, setShowScheduleMeetModal] = useState(false);
   const [showAddTodoModal, setShowAddTodoModal] = useState(false);
@@ -44,8 +45,10 @@ const Calendar = () => {
   const [events, setEvents] = useState([]);
 
   const getCalenderList=async()=>{
+
     try{
-        const data=await list_all_calender()
+      setLoading(true);
+      const data=await list_all_calender()
         console.log("list of calender",data.data.data);
         setEvents(data.data.data);
         
@@ -54,13 +57,18 @@ const Calendar = () => {
              
     }catch(error){
         console.error(error);
+             setLoading(false);
     }
     finally{
-
+     setLoading(false);
     }
      
 
   }
+
+
+
+
 
 
   // Enhanced mock data for calendar events
@@ -367,6 +375,48 @@ const Calendar = () => {
         return <CalendarIcon className="h-3 w-3" />;
     }
   };
+
+
+     if (loading) {
+    return (
+      <>
+        {/* Inline CSS for the spinner */}
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .spinner-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .spinner {
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              width: 48px;
+              height: 48px;
+              animation: spin 1s linear infinite;
+            }
+            .spinner-text {
+              margin-top: 0.75rem;
+              font-size: 1rem;
+              color: #555;
+            }
+          `}
+        </style>
+        <div className="spinner-container">
+          <div className="spinner"></div>
+          <div className="spinner-text">Loading Calender</div>
+        </div>
+      </>
+    );
+  }
+
 
   const EventCard = ({ event }) => (
     <Card className="p-3 shadow-lg border-l-4" style={{ borderLeftColor: getEventColor(event).replace('bg-', '#') }}>

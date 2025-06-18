@@ -29,6 +29,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {create_expanses} from '../api/api';
 
 const AddExpenseModal = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -67,20 +68,77 @@ const AddExpenseModal = ({ onClose }) => {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   setIsSubmitting(true);
+    
+  //   // Simulate API call
+  //   await new Promise(resolve => setTimeout(resolve, 1500));
+    
+  //   toast({
+  //     title: "Expense logged successfully! 💸",
+  //     description: `₹${formData.amount} expense has been added to your records.`,
+  //   });
+    
+  //   setIsSubmitting(false);
+  //   onClose();
+  // };
+
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+  if (formData.hasBill && !formData.billFile) {
     toast({
-      title: "Expense logged successfully! 💸",
-      description: `₹${formData.amount} expense has been added to your records.`,
+      title: "Bill file missing",
+      description: "Please upload the bill file or choose 'No, continue'",
+      variant: "destructive",
     });
-    
-    setIsSubmitting(false);
-    onClose();
-  };
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    const payload = new FormData();
+    payload.append("amount", formData.amount);
+    payload.append("title", formData.title);
+    payload.append("category", formData.category);
+    payload.append("status", formData.isPaid === "paid" ? "paid" : "pending");
+    payload.append("dueDate", formData.date ? formData.date.toISOString().split("T")[0] : "");
+    payload.append("hasBill", formData.hasBill ? "1" : "0");
+    if (formData.hasBill && formData.billFile) {
+      payload.append("bill", formData.billFile); // Ensure your backend expects field name as `bill`
+    }
+
+    const response = await create_expanses(payload);
+    console.log(response);
+    if (response.data?.status) {
+      toast({
+        title: "Expense Added ✅",
+        description: "Your expense has been recorded successfully.",
+      });
+
+      onClose();
+      if (typeof onSuccess === "function") {
+        onSuccess(response.data?.data); // send data to parent
+      }
+    } else {
+      toast({
+        title: "Failed to add expense",
+        description: response.data?.message || "Unknown error occurred.",
+        variant: "destructive",
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: "Error submitting",
+      description: err.message || "Server error",
+      variant: "destructive",
+    });
+  }
+
+  setIsSubmitting(false);
+};
+
+
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
